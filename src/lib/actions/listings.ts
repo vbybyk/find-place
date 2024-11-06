@@ -38,3 +38,28 @@ export const createListing = async (listing: Partial<IListing>, path: string) =>
     console.error("Error while creating listing", error);
   }
 };
+
+export const uploadImage = async (formData: FormData) => {
+  try {
+    const response = await fetch(`http://localhost:3030/api/listings/upload-image`, {
+      method: "POST",
+      body: formData,
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (response.ok) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await response.json();
+        return data;
+      } else {
+        const text = await response.text();
+        return text;
+      }
+    }
+  } catch (error) {
+    console.error("Error while uploading image", error);
+  }
+};

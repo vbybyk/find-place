@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "../../components/common/input";
 import { Textarea } from "../../components/common/textarea";
 import Select from "../../components/common/select";
+import FileUploader from "@/components/fileUploader";
 import { createListing } from "@/lib/actions/listings";
 import { IListing } from "@/lib/database/models/listing";
 
@@ -25,7 +26,7 @@ interface IProps {
 
 const CreateListingForm = (props: IProps) => {
   const router = useRouter();
-  const { control, handleSubmit, setValue } = useForm({
+  const { control, handleSubmit, setValue, watch } = useForm({
     mode: "all",
     defaultValues: {
       title: "",
@@ -34,6 +35,7 @@ const CreateListingForm = (props: IProps) => {
       roomsNumber: 0,
       type: 0,
       houseType: 0,
+      images: [] as string[],
     },
   });
 
@@ -46,25 +48,30 @@ const CreateListingForm = (props: IProps) => {
       setValue("roomsNumber", roomsNumber || 0);
       setValue("type", ListingTypes.find((t) => t.id === type)?.id || 0);
       setValue("houseType", PropertyTypes.find((t) => t.id === houseType)?.id || 0);
+      if (props.listing.images?.length) {
+        setValue("images", props.listing.images);
+      }
     }
   }, [props.listing]);
 
   const onSubmit = async (data: any) => {
     console.log("onSubmit", data);
-    // const newListing = {
-    //   ...data,
-    //   type: data.type.id,
-    //   houseType: data.houseType.id,
-    //   price: parseInt(data.price),
-    //   roomsNumber: parseInt(data.roomsNumber),
-    // };
-    // try {
-    //   await createListing(newListing, "/listings");
-    //   router.push("/listings");
-    // } catch (error) {
-    //   console.error("Error while creating listing in form", error);
-    // }
+    const newListing = {
+      ...data,
+      type: data.type,
+      houseType: data.houseType,
+      price: parseInt(data.price),
+      roomsNumber: parseInt(data.roomsNumber),
+    };
+    try {
+      await createListing(newListing, "/listings");
+      router.push("/listings");
+    } catch (error) {
+      console.error("Error while creating listing in form", error);
+    }
   };
+
+  const images = watch("images");
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-1/2">
@@ -99,6 +106,10 @@ const CreateListingForm = (props: IProps) => {
           control={control}
           render={({ field }) => <Select {...field} options={PropertyTypes} keyValue="id" />}
         />
+      </div>
+      <div>
+        <label htmlFor="images">Images</label>
+        <FileUploader images={images} onChange={(files) => setValue("images", files)} />
       </div>
       <button
         type="submit"
