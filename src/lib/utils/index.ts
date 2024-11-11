@@ -11,6 +11,7 @@ export const formatGeoCities = (data: any) => {
     return {
       label: city.name,
       id: city.geonameId,
+      adminName1: city.adminName1,
     };
   });
 };

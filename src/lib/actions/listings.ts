@@ -74,7 +74,7 @@ export const searchListingCity = async (search: string, country: string, maxRows
     );
     if (response.ok) {
       const data = await response.json();
-      console.log("data", data);
+      // console.log("data", data);
       return formatGeoCities(data);
     }
   } catch (error) {
