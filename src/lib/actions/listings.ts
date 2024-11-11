@@ -3,6 +3,9 @@
 import { connectToDatabase } from "../database";
 import { revalidatePath } from "next/cache";
 import Listing, { IListing } from "../database/models/listing";
+import { formatGeoCities } from "../utils";
+
+const BACKEND_URL = process.env.BACKEND_URL;
 
 export const getListings = async () => {
   try {
@@ -41,7 +44,7 @@ export const createListing = async (listing: Partial<IListing>, path: string) =>
 
 export const uploadImage = async (formData: FormData) => {
   try {
-    const response = await fetch(`http://localhost:3030/api/listings/upload-image`, {
+    const response = await fetch(`${BACKEND_URL}/api/listings/upload-image`, {
       method: "POST",
       body: formData,
       headers: {
@@ -61,5 +64,20 @@ export const uploadImage = async (formData: FormData) => {
     }
   } catch (error) {
     console.error("Error while uploading image", error);
+  }
+};
+
+export const searchListingCity = async (search: string, country: string, maxRows: string) => {
+  try {
+    const response = await fetch(
+      `${BACKEND_URL}/api/listings?maxRows=${maxRows}&country=${country}&name_startsWith=${search}`
+    );
+    if (response.ok) {
+      const data = await response.json();
+      console.log("data", data);
+      return formatGeoCities(data);
+    }
+  } catch (error) {
+    console.error("Error while searching city", error);
   }
 };
