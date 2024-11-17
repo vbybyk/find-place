@@ -21,7 +21,7 @@ const Select = forwardRef<HTMLDivElement, ISelectProps>((props: ISelectProps, re
     <div ref={ref}>
       <MuiSelect options={options} keyValue={keyValue} {...rest}>
         {options.map((option) => (
-          <Option key={option.id} value={option.id}>
+          <Option key={option.id} value={keyValue ? option[keyValue] : option.id}>
             {option.name}
           </Option>
         ))}

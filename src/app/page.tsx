@@ -36,7 +36,6 @@ export default function Home() {
     const debouncedValue = await debouncedSearch(search, delay);
     const result = await searchListingCity(debouncedValue as string, "PH", "20");
     setSearchResults(result);
-    console.log("result", result);
   };
 
   useEffect(() => {

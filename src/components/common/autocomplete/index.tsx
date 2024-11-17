@@ -9,8 +9,8 @@ import { unstable_useForkRef as useForkRef } from "@mui/utils";
 import clsx from "clsx";
 
 interface IAutocomleteProps {
-  inputValue: string;
-  onInputChange: (event: SyntheticEvent<Element, Event>, value: string, reason: AutocompleteInputChangeReason) => void;
+  inputValue?: string;
+  onInputChange?: (event: SyntheticEvent<Element, Event>, value: string, reason: AutocompleteInputChangeReason) => void;
   options: any[];
   isOptionEqualToValue?: (option: any, value: any) => boolean;
   disableClearable?: boolean;
@@ -125,7 +125,7 @@ const MuiAutocomplete = forwardRef(function Autocomplete(
               return (
                 <li
                   {...optionProps}
-                  key={option.id}
+                  key={`${option.id}-${index}`}
                   className="list-none p-2 rounded-lg cursor-default last-of-type:border-b-0 hover:cursor-pointer aria-selected:bg-violet-100 dark:aria-selected:bg-violet-900 aria-selected:text-violet-900 dark:aria-selected:text-violet-100 ui-focused:bg-gray-100 dark:ui-focused:bg-gray-700 ui-focus-visible:bg-gray-100 dark:ui-focus-visible:bg-gray-800 ui-focused:text-gray-900 dark:ui-focused:text-gray-300 ui-focus-visible:text-gray-900 dark:ui-focus-visible:text-gray-300 ui-focus-visible:shadow-[0_0_0_3px_transparent] ui-focus-visible:shadow-violet-200 dark:ui-focus-visible:shadow-violet-500 ui-focused:aria-selected:bg-violet-100 dark:ui-focused:aria-selected:bg-violet-900 ui-focus-visible:aria-selected:bg-violet-100 dark:ui-focus-visible:aria-selected:bg-violet-900 ui-focused:aria-selected:text-violet-900 dark:ui-focused:aria-selected:text-violet-100 ui-focus-visible:aria-selected:text-violet-900 dark:ui-focus-visible:aria-selected:text-violet-100"
                 >
                   {option.label}
@@ -142,11 +142,12 @@ const MuiAutocomplete = forwardRef(function Autocomplete(
   );
 });
 
-export default function Autocomplete(props: IAutocomleteProps) {
+const Autocomplete = forwardRef<HTMLDivElement, IAutocomleteProps>((props, ref) => {
   const { options, className, inputValue, onInputChange, value, onChange } = props;
 
   return (
     <MuiAutocomplete
+      ref={ref}
       options={options}
       isOptionEqualToValue={(option, value) => option?.id === value?.id}
       className={className}
@@ -156,4 +157,8 @@ export default function Autocomplete(props: IAutocomleteProps) {
       onChange={onChange}
     />
   );
-}
+});
+
+Autocomplete.displayName = "Autocomplete";
+
+export default Autocomplete;

@@ -9,9 +9,13 @@ export interface IListing extends Document {
   houseType: number;
   location?: {
     country: string;
-    city: string;
-    district: string;
-    street: string;
+    city: {
+      id: number;
+      label: string;
+      adminName1?: string;
+    };
+    addressLine1?: string;
+    addressLine2?: string;
   };
   roomsNumber?: number;
   floorsNumber?: number;
@@ -28,9 +32,13 @@ const listingSchema = new Schema<IListing>({
   houseType: { type: Number, required: true },
   location: {
     country: { type: String, required: false },
-    city: { type: String, required: false },
-    district: { type: String, required: false },
-    street: { type: String, required: false },
+    city: {
+      id: { type: Number, required: false },
+      label: { type: String, required: false },
+      adminName1: { type: String, required: false },
+    },
+    addressLine1: { type: String, required: false },
+    addressLine2: { type: String, required: false },
   },
   roomsNumber: { type: Number, required: false },
   floorsNumber: { type: Number, required: false },

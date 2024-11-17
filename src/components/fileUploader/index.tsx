@@ -86,8 +86,6 @@ const FileUploader = ({ images = [], onChange }: { images: string[]; onChange: (
     onChange(updatedFiles);
   };
 
-  console.log("isUploading", isUploading);
-
   return (
     <>
       <div

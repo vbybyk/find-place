@@ -9,7 +9,7 @@ const ListingCard = ({ listing }: { listing: IListing }) => {
       <p className="text-sm text-gray-500">{listing.description}</p>
       <p className="text-sm text-gray-500">Rooms: {listing.roomsNumber}</p>
       <p className="text-sm text-gray-500">
-        {listing.location?.city}, {listing.location?.district}, {listing.location?.street}
+        {listing.location?.city?.label}, {listing.location?.addressLine1}, {listing.location?.addressLine2}
       </p>
     </div>
   );
