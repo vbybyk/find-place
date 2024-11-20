@@ -1,16 +1,7 @@
 "use server";
 
 import { type NextRequest } from "next/server";
-
-function buildUrl(baseUrl: string, searchParams: URLSearchParams): string {
-  const url = new URL(baseUrl);
-  searchParams.forEach((value, key) => {
-    if (value) {
-      url.searchParams.append(key, value);
-    }
-  });
-  return url.toString();
-}
+import { buildUrl } from "@/utils";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

@@ -7,11 +7,12 @@ import { formatGeoCities } from "../utils";
 
 const BACKEND_URL = process.env.BACKEND_URL;
 
-export const getListings = async () => {
+export const getListings = async (queryParams) => {
+  console.log("queryParams", queryParams);
   try {
     await connectToDatabase();
 
-    const listings = await Listing.find();
+    const listings = await Listing.find(queryParams);
     return listings;
   } catch (error) {
     console.error("Error while getting listings", error);
