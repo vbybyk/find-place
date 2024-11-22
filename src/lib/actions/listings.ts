@@ -43,6 +43,19 @@ export const createListing = async (listing: Partial<IListing>, path: string) =>
   }
 };
 
+export const updateListing = async (id: string, listing: Partial<IListing>, path: string) => {
+  try {
+    await connectToDatabase();
+
+    const updatedListing = await Listing.findByIdAndUpdate(id, listing, { new: true });
+    revalidatePath(path);
+
+    return JSON.parse(JSON.stringify(updatedListing));
+  } catch (error) {
+    console.error("Error while updating listing", error);
+  }
+};
+
 export const uploadImage = async (formData: FormData) => {
   try {
     const response = await fetch(`${BACKEND_URL}/api/listings/upload-image`, {

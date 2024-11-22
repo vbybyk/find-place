@@ -2,6 +2,7 @@ import { Document, Schema, model, models } from "mongoose";
 
 export interface IListing extends Document {
   _id: string;
+  userId: number;
   title: string;
   description: string;
   price?: number;
@@ -25,6 +26,7 @@ export interface IListing extends Document {
 }
 
 const listingSchema = new Schema<IListing>({
+  userId: { type: Number, required: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
   price: { type: Number, required: false },

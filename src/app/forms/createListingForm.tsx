@@ -8,7 +8,8 @@ import { Textarea } from "../../components/common/textarea";
 import Select from "../../components/common/select";
 import Autocomplete from "../../components/common/autocomplete";
 import FileUploader from "@/components/fileUploader";
-import { createListing, searchListingCity } from "@/lib/actions/listings";
+import Spinner from "@/components/common/spinner";
+import { createListing, updateListing, searchListingCity } from "@/lib/actions/listings";
 import { IListing } from "@/lib/database/models/listing";
 
 const ListingTypes = [
@@ -28,16 +29,19 @@ const Countries = [
 
 interface IProps {
   listing?: IListing;
+  type?: "edit" | "create";
 }
 
 const CreateListingForm = (props: IProps) => {
   const router = useRouter();
   const [citiesOptions, setCitiesOptions] = useState([]);
   const [cityInput, setCityInput] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const { control, handleSubmit, setValue, watch } = useForm({
     mode: "all",
     defaultValues: {
+      userId: 0,
       title: "",
       description: "",
       price: 0,
@@ -56,7 +60,8 @@ const CreateListingForm = (props: IProps) => {
 
   useEffect(() => {
     if (props.listing) {
-      const { title, description, price, roomsNumber, type, houseType } = props.listing;
+      const { title, description, price, roomsNumber, type, houseType, userId } = props.listing;
+      setValue("userId", userId);
       setValue("title", title);
       setValue("description", description);
       setValue("price", price || 0);
@@ -103,16 +108,25 @@ const CreateListingForm = (props: IProps) => {
     console.log("onSubmit", data);
     const newListing = {
       ...data,
+      userId: 1,
       type: data.type,
       houseType: data.houseType,
       price: parseInt(data.price),
       roomsNumber: parseInt(data.roomsNumber),
     };
     try {
-      await createListing(newListing, "/listings");
-      router.push("/listings");
+      setIsUpdating(true);
+      if (props?.type === "edit" && props.listing) {
+        const listingId = props.listing._id;
+        await updateListing(listingId, newListing, `/listings/${listingId}`);
+      } else {
+        await createListing(newListing, "/listings");
+        router.push("/listings");
+      }
     } catch (error) {
       console.error("Error while creating listing in form", error);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -157,9 +171,11 @@ const CreateListingForm = (props: IProps) => {
         </div>
         <button
           type="submit"
+          disabled={isUpdating}
           className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base w-60 h-10 sm:h-12 px-4 sm:px-5"
         >
-          Submit
+          {props?.type === "edit" ? "Update" : "Submit"}
+          {isUpdating && <Spinner className="w-5 h-5" />}
         </button>
       </div>
       <div className="flex flex-col gap-4">

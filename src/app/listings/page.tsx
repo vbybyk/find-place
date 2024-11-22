@@ -8,6 +8,7 @@ interface ISearchParams {
   type?: string;
   city?: string;
   adminName1?: string;
+  userId?: string;
 }
 
 const ListingTypes = [
@@ -25,13 +26,17 @@ const ListingsPage = async ({ searchParams }: { searchParams: ISearchParams }) =
   const type = searchParams?.type;
   const city = searchParams?.city;
   const adminName1 = searchParams?.adminName1;
+  const userId = searchParams?.userId;
 
   const listings = await getListings({
     ...(houseType && { houseType }),
     ...(type && { type }),
     ...(city && { "location.city.label": city }),
     ...(adminName1 && { "location.city.adminName1": adminName1 }),
+    ...(userId && { userId: Number(userId) }),
   });
+
+  const query = userId ? `?userId=${userId}` : "";
 
   return (
     <div className="p-6">
@@ -41,7 +46,7 @@ const ListingsPage = async ({ searchParams }: { searchParams: ISearchParams }) =
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {listings?.map((listing) => (
-          <Link href={`/listings/${listing._id}`} key={listing._id}>
+          <Link href={`/listings/${listing._id}${query}`} key={listing._id}>
             <ListingCard listing={listing} />
           </Link>
         ))}
