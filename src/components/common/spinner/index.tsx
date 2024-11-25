@@ -1,9 +1,9 @@
 import React from "react";
-import clsx from "clsx";
+import cn from "classnames";
 
 const Spinner = ({ className }: { className?: string }) => (
   <svg
-    className={clsx("animate-spin h-5 w-5 text-purple-500", className)}
+    className={cn("animate-spin h-5 w-5 text-purple-500", className)}
     viewBox="0 0 24 24"
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
