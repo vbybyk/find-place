@@ -8,7 +8,6 @@ import { formatGeoCities } from "../utils";
 const BACKEND_URL = process.env.BACKEND_URL;
 
 export const getListings = async (queryParams) => {
-  console.log("queryParams", queryParams);
   try {
     await connectToDatabase();
 
@@ -88,7 +87,6 @@ export const searchListingCity = async (search: string, country: string, maxRows
     );
     if (response.ok) {
       const data = await response.json();
-      // console.log("data", data);
       return formatGeoCities(data);
     }
   } catch (error) {

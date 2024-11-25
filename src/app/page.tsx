@@ -36,7 +36,6 @@ export default function Home() {
   };
 
   const onSelectChange = (e, value: any) => {
-    console.log("value", value);
     if (value) {
       setValue(value);
       setSearch(value?.label);
