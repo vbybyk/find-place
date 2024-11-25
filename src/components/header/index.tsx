@@ -29,13 +29,13 @@ const Header = () => {
           <Link href="/" className="text-sm font-semibold leading-6 text-gray-900">
             Home
           </Link>
-          <Link href="/listings" className="text-sm font-semibold leading-6 text-gray-900">
+          <Link href="/listings?type=2" className="text-sm font-semibold leading-6 text-gray-900">
             Buy
           </Link>
-          <Link href="/listings" className="text-sm font-semibold leading-6 text-gray-900">
+          <Link href="/listings?type=1" className="text-sm font-semibold leading-6 text-gray-900">
             Rent
           </Link>
-          <Link href="#" className="text-sm font-semibold leading-6 text-gray-900">
+          <Link href="/listings?userId=1" className="text-sm font-semibold leading-6 text-gray-900">
             Manage Rentals
           </Link>
         </div>

@@ -12,6 +12,7 @@ interface ISelectProps {
   options: any[];
   onChange: (value: any) => void;
   keyValue?: string;
+  placeholder?: string;
 }
 
 const Select = forwardRef<HTMLDivElement, ISelectProps>((props: ISelectProps, ref) => {
@@ -21,7 +22,7 @@ const Select = forwardRef<HTMLDivElement, ISelectProps>((props: ISelectProps, re
     <div ref={ref}>
       <MuiSelect options={options} keyValue={keyValue} {...rest}>
         {options.map((option) => (
-          <Option key={option.id} value={option.id}>
+          <Option key={option.id} value={keyValue ? option[keyValue] : option.id}>
             {option.name}
           </Option>
         ))}
