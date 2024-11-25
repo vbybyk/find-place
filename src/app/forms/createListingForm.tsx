@@ -105,7 +105,6 @@ const CreateListingForm = (props: IProps) => {
   };
 
   const onSubmit = async (data: any) => {
-    console.log("onSubmit", data);
     const newListing = {
       ...data,
       userId: 1,
