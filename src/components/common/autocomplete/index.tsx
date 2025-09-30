@@ -28,7 +28,7 @@ interface IOption {
 }
 
 const MuiAutocomplete = forwardRef(function Autocomplete(
-  props: UseAutocompleteProps<IOption, false, false, false>,
+  props: UseAutocompleteProps<IOption, false, false, false> & { className?: string },
   ref: ForwardedRef<HTMLDivElement>
 ) {
   const {

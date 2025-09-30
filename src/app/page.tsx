@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, SyntheticEvent } from "react";
 import { useRouter } from "next/navigation";
 import { searchListingCity } from "@/lib/actions/listings";
 import Autocomplete from "@/components/common/autocomplete";
@@ -27,15 +27,15 @@ export default function Home() {
 
   const router = useRouter();
 
-  const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event?.target?.value === undefined) return;
-    setSearch(event.target.value);
-    if (!event.target.value) {
+  const onInputChange = (e: SyntheticEvent<Element, Event>, value: string) => {
+    if (value === undefined) return;
+    setSearch(value);
+    if (!value) {
       setValue(null);
     }
   };
 
-  const onSelectChange = (e, value: any) => {
+  const onSelectChange = (e: SyntheticEvent<Element, Event>, value: any) => {
     if (value) {
       setValue(value);
       setSearch(value?.label);

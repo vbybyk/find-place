@@ -7,7 +7,14 @@ const ListingDetails = ({ listing }: { listing: IListing }) => {
       <div className="grid gap-4 grid-cols-4 grid-rows-2 mb-4">
         {listing?.images?.map((image, index) => (
           <div key={image} className={`relative ${index === 0 ? "col-span-2 row-span-2 h-96" : ""}`}>
-            <Image key={image} src={image} alt={listing.title} layout="fill" objectFit="cover" />
+            <Image
+              key={image}
+              src={image}
+              alt={listing.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
           </div>
         ))}
       </div>

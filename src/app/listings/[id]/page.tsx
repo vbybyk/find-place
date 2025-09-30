@@ -3,8 +3,8 @@ import CreateListingForm from "@/app/forms/createListingForm";
 import ListingDetails from "@/components/listingDetails";
 
 const Listing = async ({ params, searchParams }: { params: { id: string }; searchParams: { userId: string } }) => {
-  const { id } = params;
-  const { userId } = searchParams;
+  const { id } = await params;
+  const { userId } = await searchParams;
   const listing = await getListingById(id);
 
   return (
