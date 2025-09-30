@@ -22,11 +22,7 @@ const PropertyTypes = [
 ];
 
 const ListingsPage = async ({ searchParams }: { searchParams: ISearchParams }) => {
-  const houseType = searchParams?.houseType;
-  const type = searchParams?.type;
-  const city = searchParams?.city;
-  const adminName1 = searchParams?.adminName1;
-  const userId = searchParams?.userId;
+  const { houseType, type, city, adminName1, userId } = await searchParams;
 
   const listings = await getListings({
     ...(houseType && { houseType }),

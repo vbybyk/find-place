@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { SyntheticEvent, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Input } from "../../components/common/input";
@@ -91,13 +91,13 @@ const CreateListingForm = (props: IProps) => {
     }
   }, [country]);
 
-  const onCityInputChange = (event: React.ChangeEvent<HTMLInputElement>, value: string) => {
+  const onCityInputChange = (e: SyntheticEvent<Element, Event>, value: string) => {
     if (value !== cityInput) {
       setCityInput(value);
     }
   };
 
-  const handleCityChange = (event: any, value: any) => {
+  const handleCityChange = (e: SyntheticEvent<Element, Event>, value: any) => {
     if (value && value.label !== cityInput) {
       setCityInput(value.label);
       setValue("location.city", value);
