@@ -1,16 +1,11 @@
 "use client";
-import { SyntheticEvent, forwardRef, ForwardedRef, Fragment } from "react";
-import { useAutocomplete, UseAutocompleteProps, AutocompleteInputChangeReason } from "@mui/base/useAutocomplete";
-import { Button } from "@mui/base/Button";
-import { Popper } from "@mui/base/Popper";
-import { unstable_useForkRef as useForkRef } from "@mui/utils";
-// import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-// import ClearIcon from "@mui/icons-material/Clear";
+import React, { forwardRef, SyntheticEvent } from "react";
+import { Autocomplete as BaseUIAutocomplete } from "@base-ui-components/react/autocomplete";
 import clsx from "clsx";
 
-interface IAutocomleteProps {
+interface IAutocompleteProps {
   inputValue?: string;
-  onInputChange?: (event: SyntheticEvent<Element, Event>, value: string, reason: AutocompleteInputChangeReason) => void;
+  onInputChange?: (event: SyntheticEvent<Element, Event>, value: string, reason: "input" | "reset" | "clear") => void;
   options: any[];
   isOptionEqualToValue?: (option: any, value: any) => boolean;
   disableClearable?: boolean;
@@ -18,7 +13,7 @@ interface IAutocomleteProps {
   readOnly?: boolean;
   className?: string;
   value: any;
-  onChange: (event: SyntheticEvent<Element, Event>, value: any) => void;
+  onChange: (value: any) => void;
 }
 
 interface IOption {
@@ -27,138 +22,106 @@ interface IOption {
   adminName1?: string;
 }
 
-const MuiAutocomplete = forwardRef(function Autocomplete(
-  props: UseAutocompleteProps<IOption, false, false, false> & { className?: string },
-  ref: ForwardedRef<HTMLDivElement>
-) {
+const Autocomplete = forwardRef<HTMLDivElement, IAutocompleteProps>((props, _ref) => {
   const {
+    inputValue,
+    onInputChange,
+    options,
     disableClearable = false,
     disabled = false,
     readOnly = false,
-    options,
-    isOptionEqualToValue,
     className,
-    inputValue,
-    onInputChange,
-    ...other
+    onChange,
   } = props;
 
-  const {
-    getRootProps,
-    getInputProps,
-    getPopupIndicatorProps,
-    getClearProps,
-    getListboxProps,
-    getOptionProps,
-    dirty,
-    id,
-    popupOpen,
-    focused,
-    anchorEl,
-    setAnchorEl,
-    groupedOptions,
-  } = useAutocomplete({
-    ...props,
-    componentName: "BaseAutocompleteIntroduction",
-  });
-
-  const hasClearIcon = !disableClearable && !disabled && dirty && !readOnly;
-
-  const rootRef = useForkRef(ref, setAnchorEl);
-
   return (
-    <Fragment>
-      <div
-        {...getRootProps(other)}
-        ref={rootRef}
-        className={clsx(
-          "flex gap-[5px] pr-[5px] overflow-hidden w-80 rounded-lg bg-white dark:bg-gray-800 border border-solid border-gray-200 dark:border-gray-700 hover:border-violet-400 dark:hover:border-violet-400 focus-visible:outline-0 shadow-[0_2px_4px_rgb(0_0_0_/_0.05)] dark:shadow-[0_2px_4px_rgb(0_0_0_/_0.5)]",
-          !focused && "shadow-[0_2px_2px_transparent] shadow-gray-50 dark:shadow-gray-900",
-          focused &&
-            "border-violet-400 dark:border-violet-400 shadow-[0_0_0_3px_transparent] shadow-violet-200 dark:shadow-violet-500",
-          className
-        )}
-      >
-        <input
-          id={id}
+    <BaseUIAutocomplete.Root
+      autoHighlight
+      value={inputValue}
+      onValueChange={(newInputValue) => {
+        if (onInputChange) {
+          onInputChange(new Event("input") as unknown as SyntheticEvent, newInputValue, "input");
+        }
+      }}
+      items={options}
+    >
+      <div className={clsx("relative w-full")}>
+        <BaseUIAutocomplete.Input
           disabled={disabled}
           readOnly={readOnly}
-          {...getInputProps()}
-          className="text-sm leading-[1.5] text-gray-900 dark:text-gray-300 bg-inherit border-0 rounded-[inherit] px-3 py-2 outline-0 grow shrink-0 basis-auto"
+          className={clsx(
+            "overflow-hidden text-sm leading-[1.5] text-gray-900 dark:text-gray-300 bg-white px-3 py-2 outline-0 border border-solid border-gray-200",
+            "focus-within:border-violet-400 dark:focus-within:border-violet-400 focus-within:shadow-[0_0_0_1px_transparent] focus-within:shadow-violet-200 dark:focus-within:shadow-violet-500 focus-within:outline-0",
+            "dark:bg-gray-800, dark:border-gray-700",
+            className
+          )}
+          placeholder="Type to search..."
         />
-        {hasClearIcon && (
-          <Button
-            {...getClearProps()}
-            className="self-center outline-0 shadow-none border-0 py-0 px-0.5 rounded-[4px] bg-transparent hover:bg-violet-100 dark:hover:bg-gray-700 hover:cursor-pointer"
+        {!disableClearable && !disabled && inputValue && !readOnly && (
+          <BaseUIAutocomplete.Clear
+            onClick={() => {
+              if (onChange) onChange(null);
+              if (onInputChange) {
+                onInputChange(new Event("clear") as unknown as SyntheticEvent, "", "clear");
+              }
+            }}
+            className="absolute right-1 top-1/2 -translate-y-1/2 self-center outline-0 shadow-none border-0 py-0 px-0.5 rounded-[4px] bg-transparent hover:bg-violet-100 dark:hover:bg-gray-700 hover:cursor-pointer"
           >
-            {/* <ClearIcon className="translate-y-[2px] scale-90" /> */}
-          </Button>
+            <ClearIcon />
+          </BaseUIAutocomplete.Clear>
         )}
-        <Button
-          {...getPopupIndicatorProps()}
-          className="self-center outline-0 shadow-none border-0 py-0 px-0.5 rounded-[4px] bg-transparent hover:bg-violet-100 dark:hover:bg-gray-700 hover:cursor-pointer"
-        >
-          {/* <ArrowDropDownIcon className={clsx("translate-y-[2px]", popupOpen && "rotate-180")} /> */}
-        </Button>
       </div>
-      {anchorEl && (
-        <Popper
-          open={popupOpen}
-          anchorEl={anchorEl}
-          slotProps={{
-            root: {
-              className: "relative z-[1001] w-80", // z-index: 1001 is needed to override ComponentPageTabs with z-index: 1000
-            },
-          }}
-          modifiers={[
-            { name: "flip", enabled: false },
-            { name: "preventOverflow", enabled: false },
-          ]}
-        >
-          <ul
-            {...getListboxProps()}
-            className="text-sm box-border p-1.5 my-3 mx-0 min-w-[320px] rounded-xl overflow-auto outline-0 max-h-[300px] z-[1] bg-white dark:bg-gray-800 border border-solid border-gray-200 dark:border-gray-900 text-gray-900 dark:text-gray-200 shadow-[0_4px_30px_transparent] shadow-gray-200 dark:shadow-gray-900"
-          >
-            {(groupedOptions as IOption[]).map((option, index) => {
-              const { key: _key, ...optionProps } = getOptionProps({ option, index });
-
-              return (
-                <li
+      <BaseUIAutocomplete.Portal>
+        <BaseUIAutocomplete.Positioner sideOffset={-8}>
+          <BaseUIAutocomplete.Popup className="text-sm box-border p-1.5 my-3 mx-0 w-[400px] rounded-xl overflow-auto outline-0 max-h-[300px] z-[1] bg-white dark:bg-gray-800 border border-solid border-gray-200 dark:border-gray-900 text-gray-900 dark:text-gray-200 shadow-[0_4px_30px_transparent] shadow-gray-200 dark:shadow-gray-900">
+            {options.length === 0 && (
+              <BaseUIAutocomplete.Empty className="list-none p-2 cursor-default">No results</BaseUIAutocomplete.Empty>
+            )}
+            <BaseUIAutocomplete.List>
+              {(option: IOption, index: number) => (
+                <BaseUIAutocomplete.Item
                   key={`${option.id}-${index}`}
-                  {...optionProps}
-                  className="list-none p-2 rounded-lg cursor-default last-of-type:border-b-0 hover:cursor-pointer aria-selected:bg-violet-100 dark:aria-selected:bg-violet-900 aria-selected:text-violet-900 dark:aria-selected:text-violet-100 ui-focused:bg-gray-100 dark:ui-focused:bg-gray-700 ui-focus-visible:bg-gray-100 dark:ui-focus-visible:bg-gray-800 ui-focused:text-gray-900 dark:ui-focused:text-gray-300 ui-focus-visible:text-gray-900 dark:ui-focus-visible:text-gray-300 ui-focus-visible:shadow-[0_0_0_3px_transparent] ui-focus-visible:shadow-violet-200 dark:ui-focus-visible:shadow-violet-500 ui-focused:aria-selected:bg-violet-100 dark:ui-focused:aria-selected:bg-violet-900 ui-focus-visible:aria-selected:bg-violet-100 dark:ui-focus-visible:aria-selected:bg-violet-900 ui-focused:aria-selected:text-violet-900 dark:ui-focused:aria-selected:text-violet-100 ui-focus-visible:aria-selected:text-violet-900 dark:ui-focus-visible:aria-selected:text-violet-100"
+                  value={option}
+                  onClick={() => onChange?.(option)}
+                  className={({ highlighted, selected }) =>
+                    clsx(
+                      "flex items-center list-none p-2 rounded-lg cursor-default last-of-type:border-b-0 hover:cursor-pointer",
+                      selected && "bg-violet-100 dark:bg-violet-900 text-violet-900 dark:text-violet-100",
+                      highlighted && !selected && "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-300",
+                      highlighted &&
+                        selected &&
+                        "bg-violet-100 dark:bg-violet-900 text-violet-900 dark:text-violet-100",
+                      !highlighted && !selected && "hover:cursor-pointer"
+                    )
+                  }
                 >
-                  {option.label}
-                  <span className="ml-2.5 text-xs text-gray-400">{option?.adminName1}</span>
-                </li>
-              );
-            })}
-
-            {groupedOptions.length === 0 && <li className="list-none p-2 cursor-default">No results</li>}
-          </ul>
-        </Popper>
-      )}
-    </Fragment>
-  );
-});
-
-const Autocomplete = forwardRef<HTMLDivElement, IAutocomleteProps>((props, ref) => {
-  const { options, className, inputValue, onInputChange, value, onChange } = props;
-
-  return (
-    <MuiAutocomplete
-      ref={ref}
-      options={options}
-      isOptionEqualToValue={(option, value) => option?.id === value?.id}
-      className={className}
-      inputValue={inputValue}
-      onInputChange={onInputChange}
-      value={value}
-      onChange={onChange}
-    />
+                  <span>{option.label}</span>
+                  {option.adminName1 && <span className="ml-2.5 text-xs text-gray-400">{option.adminName1}</span>}
+                </BaseUIAutocomplete.Item>
+              )}
+            </BaseUIAutocomplete.List>
+          </BaseUIAutocomplete.Popup>
+        </BaseUIAutocomplete.Positioner>
+      </BaseUIAutocomplete.Portal>
+    </BaseUIAutocomplete.Root>
   );
 });
 
 Autocomplete.displayName = "Autocomplete";
+
+function ClearIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className="w-4 h-4 scale-90"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
 
 export default Autocomplete;

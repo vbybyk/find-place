@@ -5,7 +5,7 @@ import { searchListingCity } from "@/lib/actions/listings";
 import Autocomplete from "@/components/common/autocomplete";
 
 interface ISearchValue {
-  id: string;
+  id: number;
   label: string;
   adminName1: string;
 }
@@ -22,7 +22,7 @@ const debouncedSearch = (search: string, delay: number) => {
 
 export default function Home() {
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<ISearchValue[]>([]);
   const [value, setValue] = useState<ISearchValue | null>(null);
 
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function Home() {
     }
   };
 
-  const onSelectChange = (e: SyntheticEvent<Element, Event>, value: any) => {
+  const onSelectChange = (value: ISearchValue) => {
     if (value) {
       setValue(value);
       setSearch(value?.label);
@@ -74,7 +74,7 @@ export default function Home() {
             onInputChange={onInputChange}
             value={value}
             onChange={onSelectChange}
-            className="w-full h-12 px-4 text-lg rounded-s-md rounded-none"
+            className="w-full grow shrink-0 basis-auto h-12 px-4 text-lg rounded-l-lg"
           />
           <button
             className="px-5 py-1 text-lg font-medium text-white bg-black/[.8] dark:bg-white/[.8] rounded-e-md"
