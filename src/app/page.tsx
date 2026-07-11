@@ -23,6 +23,7 @@ const debouncedSearch = (search: string, delay: number) => {
 export default function Home() {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<ISearchValue[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState<ISearchValue | null>(null);
 
   const router = useRouter();
@@ -47,10 +48,17 @@ export default function Home() {
   };
 
   const getSearchResults = async (search: string) => {
-    const delay = 500;
+    setIsLoading(true);
+    const delay = 200;
     const debouncedValue = await debouncedSearch(search, delay);
-    const result = await searchListingCity(debouncedValue as string, "PH", "20");
-    setSearchResults(result);
+    try {
+      const result = await searchListingCity(debouncedValue as string, "PH", "20");
+      setSearchResults(result);
+    } catch (error) {
+      console.error("Error while searching city", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -75,6 +83,8 @@ export default function Home() {
             value={value}
             onChange={onSelectChange}
             className="w-full grow shrink-0 basis-auto h-12 px-4 text-lg rounded-l-lg"
+            loading={isLoading}
+            readOnly={!!value}
           />
           <button
             className="px-5 py-1 text-lg font-medium text-white bg-black/[.8] dark:bg-white/[.8] rounded-e-md"

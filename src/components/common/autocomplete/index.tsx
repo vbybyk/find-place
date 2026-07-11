@@ -2,6 +2,7 @@
 import React, { forwardRef, SyntheticEvent } from "react";
 import { Autocomplete as BaseUIAutocomplete } from "@base-ui-components/react/autocomplete";
 import clsx from "clsx";
+import Spinner from "../spinner";
 
 interface IAutocompleteProps {
   inputValue?: string;
@@ -14,6 +15,7 @@ interface IAutocompleteProps {
   className?: string;
   value: any;
   onChange: (value: any) => void;
+  loading?: boolean;
 }
 
 interface IOption {
@@ -32,6 +34,7 @@ const Autocomplete = forwardRef<HTMLDivElement, IAutocompleteProps>((props, _ref
     readOnly = false,
     className,
     onChange,
+    loading,
   } = props;
 
   return (
@@ -47,7 +50,7 @@ const Autocomplete = forwardRef<HTMLDivElement, IAutocompleteProps>((props, _ref
     >
       <div className={clsx("relative w-full")}>
         <BaseUIAutocomplete.Input
-          disabled={disabled}
+          disabled={disabled || readOnly}
           readOnly={readOnly}
           className={clsx(
             "overflow-hidden text-sm leading-[1.5] text-gray-900 dark:text-gray-300 bg-white px-3 py-2 outline-0 border border-solid border-gray-200",
@@ -57,7 +60,7 @@ const Autocomplete = forwardRef<HTMLDivElement, IAutocompleteProps>((props, _ref
           )}
           placeholder="Type to search..."
         />
-        {!disableClearable && !disabled && inputValue && !readOnly && (
+        {!disableClearable && !disabled && inputValue && !loading && (
           <BaseUIAutocomplete.Clear
             onClick={() => {
               if (onChange) onChange(null);
@@ -70,17 +73,22 @@ const Autocomplete = forwardRef<HTMLDivElement, IAutocompleteProps>((props, _ref
             <ClearIcon />
           </BaseUIAutocomplete.Clear>
         )}
+        {loading && (
+          <BaseUIAutocomplete.Icon className="absolute right-1 top-1/2 -translate-y-1/2 self-center">
+            <LoadingIcon />
+          </BaseUIAutocomplete.Icon>
+        )}
       </div>
       <BaseUIAutocomplete.Portal>
         <BaseUIAutocomplete.Positioner sideOffset={-8}>
           <BaseUIAutocomplete.Popup className="text-sm box-border p-1.5 my-3 mx-0 w-[400px] rounded-xl overflow-auto outline-0 max-h-[300px] z-[1] bg-white dark:bg-gray-800 border border-solid border-gray-200 dark:border-gray-900 text-gray-900 dark:text-gray-200 shadow-[0_4px_30px_transparent] shadow-gray-200 dark:shadow-gray-900">
-            {options.length === 0 && (
+            {!options?.length && (
               <BaseUIAutocomplete.Empty className="list-none p-2 cursor-default">No results</BaseUIAutocomplete.Empty>
             )}
             <BaseUIAutocomplete.List>
               {(option: IOption, index: number) => (
                 <BaseUIAutocomplete.Item
-                  key={`${option.id}-${index}`}
+                  key={`${option?.id}-${index}`}
                   value={option}
                   onClick={() => onChange?.(option)}
                   className={({ highlighted, selected }) =>
@@ -122,6 +130,10 @@ function ClearIcon() {
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
   );
+}
+
+function LoadingIcon() {
+  return <Spinner className="w-4 h-4 animate-spin" />;
 }
 
 export default Autocomplete;
