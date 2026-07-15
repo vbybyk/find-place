@@ -31,7 +31,7 @@ uv run --directory server uvicorn app.main:app --reload --port 8000   # /health,
 uv sync --project server        # install/refresh deps
 ```
 
-No test runner is configured yet. When tests are added: **Vitest** (client) / **pytest** (server), with test files **colocated** next to source (`Foo.test.tsx`), never in a per-feature `tests/` folder.
+Test runners: **Vitest** (client, configured) / **pytest** (server, pending). Client tests live in a **`tests/` subfolder within each source folder** — e.g. `features/listings/tests/ListingCard.test.tsx`, `utils/tests/index.test.ts` — importing the unit under test via a relative `../` path. Run with `npm run test --prefix client` (CI) or `npm run test:watch`. Vitest config: `client/vitest.config.ts` (jsdom, `@/` alias, setup in `vitest.setup.ts`); glob is `src/**/*.{test,spec}.{ts,tsx}`.
 
 ## Client
 
@@ -49,7 +49,7 @@ Stack: Next.js 16, React 19.2, TypeScript 5.9, Tailwind CSS v4, `@base-ui-compon
   - Hooks → `src/hooks/<domain>.ts`
   - Utils → `src/utils/` (generic) or `src/utils/<domain>.ts`
   - Keep the `<domain>.ts` filename consistent across kinds so locations are predictable.
-- **Do not create empty folders ahead of need** (no empty `hooks/`, no per-feature `tests/`).
+- **Do not create empty folders ahead of need** (no empty `hooks/`). A `tests/` subfolder is expected wherever tested source lives (see Commands).
 - Decision rule: reused across features → `components/`; specific to one domain's view → `features/<domain>/`; non-view logic → the matching kind folder above.
 
 ### Data flow (current — Mongo-backed)
@@ -79,7 +79,6 @@ FastAPI skeleton under `server/app/`, layered: **routes → services → reposit
 
 ## Conventions & gotchas
 
-- **Builds ignore errors.** `client/next.config.mjs` sets `eslint.ignoreDuringBuilds` and `typescript.ignoreBuildErrors` to `true`, so `npm run build` will NOT catch lint/type errors — run `lint` and `tsc --noEmit` explicitly.
 - **ESLint is flat config** (`client/eslint.config.mjs`) spreading `eslint-config-next`'s native array. Custom rules (scoped to `**/*.ts,tsx`): `@typescript-eslint/no-explicit-any` off; unused vars/args prefixed `_` ignored.
 - **Pinned-below-latest on purpose:** TypeScript stays on **5.9** (TS 7 crashes `typescript-eslint`); ESLint on **9** (ESLint 10 breaks `eslint-config-next` and needs Node 24). Base UI stays on `@base-ui-components/react` (renamed upstream to `@base-ui/react`; migration deferred — it touches the autocomplete/select APIs, and the autocomplete is being reworked for Google Places).
 - **Tailwind v4** — CSS-first: `@import "tailwindcss"` + `@theme` in `globals.css`, `@tailwindcss/postcss` in `postcss.config.mjs`. No `tailwind.config.ts`.
