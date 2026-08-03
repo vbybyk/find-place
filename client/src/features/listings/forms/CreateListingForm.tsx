@@ -10,9 +10,8 @@ import Autocomplete from "@/components/ui/autocomplete";
 import FileUploader from "@/features/listings/FileUploader";
 import Spinner from "@/components/ui/spinner";
 import { createListing, updateListing, searchListingCity } from "@/lib/actions/listings";
-import { IListing } from "@/lib/database/models/listing";
 import { ListingTypes, PropertyTypes, Countries } from "@/constants/listings";
-import { ICityOption, IListingFormValues } from "@/types/listings";
+import { ICityOption, IListing, IListingFormValues, IListingPayload } from "@/types/listings";
 
 interface IProps {
   listing?: IListing;
@@ -47,25 +46,28 @@ const CreateListingForm = (props: IProps) => {
 
   useEffect(() => {
     if (props.listing) {
-      const { title, description, price, roomsNumber, type, houseType, userId } = props.listing;
-      setValue("userId", userId);
-      setValue("title", title);
-      setValue("description", description);
-      setValue("price", price || 0);
-      setValue("roomsNumber", roomsNumber || 0);
-      setValue("type", ListingTypes.find((t) => t.id === type)?.id || 0);
-      setValue("houseType", PropertyTypes.find((t) => t.id === houseType)?.id || 0);
-      if (props.listing.images?.length) {
-        setValue("images", props.listing.images);
+      const l = props.listing;
+      setValue("userId", l.user_id);
+      setValue("title", l.title);
+      setValue("description", l.description);
+      setValue("price", l.price || 0);
+      setValue("roomsNumber", l.rooms_number || 0);
+      setValue("type", ListingTypes.find((t) => t.id === l.type)?.id || 0);
+      setValue("houseType", PropertyTypes.find((t) => t.id === l.house_type)?.id || 0);
+      if (l.images?.length) {
+        setValue("images", l.images);
       }
-      if (props.listing.location) {
-        const { location } = props.listing;
-        setValue("location", {
-          country: location.country ?? "PH",
-          city: location.city ?? null,
-          addressLine1: location.addressLine1 ?? "",
-          addressLine2: location.addressLine2 ?? "",
-        });
+      setValue("location", {
+        country: l.country ?? "PH",
+        city:
+          l.city_id != null
+            ? { id: l.city_id, label: l.city_label ?? "", adminName1: l.admin_name1 ?? undefined }
+            : null,
+        addressLine1: l.address_line1 ?? "",
+        addressLine2: l.address_line2 ?? "",
+      });
+      if (l.city_label) {
+        setCityInput(l.city_label);
       }
     }
   }, [props.listing]);
@@ -97,22 +99,30 @@ const CreateListingForm = (props: IProps) => {
     }
   };
 
-  const onSubmit = async (data: any) => {
-    const newListing = {
-      ...data,
-      userId: 1,
-      type: data.type,
-      houseType: data.houseType,
-      price: parseInt(data.price),
-      roomsNumber: parseInt(data.roomsNumber),
+  const onSubmit = async (data: IListingFormValues) => {
+    const payload: IListingPayload = {
+      user_id: 1,
+      title: data.title,
+      description: data.description,
+      type: Number(data.type),
+      house_type: Number(data.houseType),
+      price: data.price ? Number(data.price) : null,
+      rooms_number: data.roomsNumber ? Number(data.roomsNumber) : null,
+      country: data.location.country || null,
+      city_id: data.location.city?.id ?? null,
+      city_label: data.location.city?.label ?? null,
+      admin_name1: data.location.city?.adminName1 ?? null,
+      address_line1: data.location.addressLine1 || null,
+      address_line2: data.location.addressLine2 || null,
+      images: data.images ?? [],
     };
     try {
       setIsUpdating(true);
       if (props?.type === "edit" && props.listing) {
-        const listingId = props.listing._id;
-        await updateListing(listingId, newListing, `/listings/${listingId}`);
+        const listingId = props.listing.id;
+        await updateListing(listingId, payload, `/listings/${listingId}`);
       } else {
-        await createListing(newListing, "/listings");
+        await createListing(payload, "/listings");
         router.push("/listings");
       }
     } catch (error) {

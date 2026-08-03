@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { IListing } from "@/lib/database/models/listing";
+import { IListing } from "@/types/listings";
 
 const ListingDetails = ({ listing }: { listing: IListing }) => {
   return (
@@ -21,9 +21,9 @@ const ListingDetails = ({ listing }: { listing: IListing }) => {
       <h1 className="text-xl font-semibold">{listing?.title}</h1>
       <h2 className="text-lg font-semibold">{listing?.price}₱</h2>
       <p>
-        {listing?.location?.city?.label}, {listing?.location?.addressLine1}, {listing?.location?.addressLine2}
+        {listing?.city_label}, {listing?.address_line1}, {listing?.address_line2}
       </p>
-      <p>Rooms: {listing?.roomsNumber}</p>
+      <p>Rooms: {listing?.rooms_number}</p>
       <h3 className="text-base font-semibold mt-4">Description</h3>
       <p>{listing?.description}</p>
     </div>

@@ -1,19 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// vi.hoisted so these exist before the hoisted vi.mock factories reference them.
-const { Listing, connectToDatabase, revalidatePath } = vi.hoisted(() => ({
-  Listing: {
-    find: vi.fn(),
-    findById: vi.fn(),
-    create: vi.fn(),
-    findByIdAndUpdate: vi.fn(),
-  },
-  connectToDatabase: vi.fn(),
-  revalidatePath: vi.fn(),
-}));
-
-vi.mock("@/lib/database", () => ({ connectToDatabase: () => connectToDatabase() }));
-vi.mock("@/lib/database/models/listing", () => ({ default: Listing }));
+// revalidatePath is a Next server-only helper; stub it so the actions run in jsdom.
+const { revalidatePath } = vi.hoisted(() => ({ revalidatePath: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: (p: string) => revalidatePath(p) }));
 
 import {
@@ -27,53 +15,82 @@ import {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  connectToDatabase.mockResolvedValue(undefined);
+  vi.unstubAllGlobals();
 });
 
 describe("getListings", () => {
-  it("connects and returns the query results", async () => {
-    Listing.find.mockResolvedValue([{ title: "a" }]);
-    const result = await getListings({ type: 1 } as never);
+  it("builds the query string and returns the parsed listings", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => [{ id: 1, title: "a" }] });
+    vi.stubGlobal("fetch", fetchSpy);
 
-    expect(connectToDatabase).toHaveBeenCalledTimes(1);
-    expect(Listing.find).toHaveBeenCalledWith({ type: 1 });
-    expect(result).toEqual([{ title: "a" }]);
+    const result = await getListings({ type: "1", houseType: "2", city: "Manila", userId: "7" });
+
+    const url = fetchSpy.mock.calls[0][0] as string;
+    expect(url).toContain("/listings?");
+    expect(url).toContain("type=1");
+    expect(url).toContain("house_type=2");
+    expect(url).toContain("user_id=7");
+    expect(url).toContain("city=Manila");
+    expect(result).toEqual([{ id: 1, title: "a" }]);
   });
 
-  it("swallows errors and returns undefined", async () => {
-    Listing.find.mockRejectedValue(new Error("db down"));
-    expect(await getListings({} as never)).toBeUndefined();
+  it("returns an empty array on a non-ok response", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+    expect(await getListings()).toEqual([]);
   });
 });
 
 describe("getListingById", () => {
-  it("returns a plain serialized document", async () => {
-    Listing.findById.mockResolvedValue({ _id: "1", title: "a" });
-    const result = await getListingById("1");
-    expect(Listing.findById).toHaveBeenCalledWith("1");
-    expect(result).toMatchObject({ _id: "1", title: "a" });
+  it("returns the listing on success", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ id: 3, title: "a" }) })
+    );
+    expect(await getListingById("3")).toEqual({ id: 3, title: "a" });
+  });
+
+  it("returns null on 404", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
+    expect(await getListingById("999")).toBeNull();
   });
 });
 
 describe("createListing", () => {
-  it("creates, revalidates the path and returns the serialized doc", async () => {
-    Listing.create.mockResolvedValue({ _id: "9", title: "new" });
-    const result = await createListing({ title: "new" } as never, "/listings");
+  it("POSTs the payload, revalidates and returns the created listing", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ id: 9, title: "new" }) });
+    vi.stubGlobal("fetch", fetchSpy);
 
-    expect(Listing.create).toHaveBeenCalledWith({ title: "new" });
+    const result = await createListing(
+      { user_id: 1, title: "new", description: "d", type: 1, house_type: 1 },
+      "/listings"
+    );
+
+    const [url, opts] = fetchSpy.mock.calls[0];
+    expect(url).toContain("/listings");
+    expect((opts as RequestInit).method).toBe("POST");
     expect(revalidatePath).toHaveBeenCalledWith("/listings");
-    expect(result).toEqual({ _id: "9", title: "new" });
+    expect(result).toEqual({ id: 9, title: "new" });
   });
 });
 
 describe("updateListing", () => {
-  it("updates by id with { new: true }, revalidates and serializes", async () => {
-    Listing.findByIdAndUpdate.mockResolvedValue({ _id: "9", title: "upd" });
-    const result = await updateListing("9", { title: "upd" } as never, "/listings/9");
+  it("PATCHes by numeric id, revalidates and returns the updated listing", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ id: 9, title: "upd" }) });
+    vi.stubGlobal("fetch", fetchSpy);
 
-    expect(Listing.findByIdAndUpdate).toHaveBeenCalledWith("9", { title: "upd" }, { new: true });
+    const result = await updateListing(9, { title: "upd" }, "/listings/9");
+
+    const [url, opts] = fetchSpy.mock.calls[0];
+    expect(url).toContain("/listings/9");
+    expect((opts as RequestInit).method).toBe("PATCH");
     expect(revalidatePath).toHaveBeenCalledWith("/listings/9");
-    expect(result).toEqual({ _id: "9", title: "upd" });
+    expect(result).toEqual({ id: 9, title: "upd" });
   });
 });
 

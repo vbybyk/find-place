@@ -1,4 +1,4 @@
-import { IListing } from "@/lib/database/models/listing";
+import { IListing } from "@/types/listings";
 import Image from "next/image";
 
 const ListingCard = ({ listing }: { listing: IListing }) => {
@@ -18,9 +18,9 @@ const ListingCard = ({ listing }: { listing: IListing }) => {
       </div>
       <h3 className="text-lg font-semibold">{listing.price}₱</h3>
       <p className="text-sm text-gray-500">{listing.title}</p>
-      <p className="text-sm text-gray-500">Rooms: {listing.roomsNumber}</p>
+      <p className="text-sm text-gray-500">Rooms: {listing.rooms_number}</p>
       <p className="text-sm text-gray-500">
-        {listing.location?.city?.label}, {listing.location?.addressLine1}, {listing.location?.addressLine2}
+        {listing.city_label}, {listing.address_line1}, {listing.address_line2}
       </p>
     </div>
   );

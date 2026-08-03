@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import ListingCard from "../ListingCard";
-import type { IListing } from "@/lib/database/models/listing";
+import type { IListing } from "@/types/listings";
 
 // next/image renders a plain <img> in jsdom so we can assert on src/alt.
 vi.mock("next/image", () => ({
@@ -12,9 +12,11 @@ vi.mock("next/image", () => ({
 const baseListing = {
   title: "Cozy flat",
   price: 15000,
-  roomsNumber: 3,
+  rooms_number: 3,
   images: ["https://res.cloudinary.com/x.jpg"],
-  location: { city: { label: "Manila" }, addressLine1: "1 Rizal St", addressLine2: "Unit 4" },
+  city_label: "Manila",
+  address_line1: "1 Rizal St",
+  address_line2: "Unit 4",
 } as unknown as IListing;
 
 describe("ListingCard", () => {

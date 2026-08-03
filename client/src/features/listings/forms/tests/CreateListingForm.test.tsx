@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CreateListingForm from "../CreateListingForm";
-import type { IListing } from "@/lib/database/models/listing";
+import type { IListing } from "@/types/listings";
 
 const createListing = vi.fn();
 const updateListing = vi.fn();
@@ -44,7 +44,7 @@ describe("CreateListingForm", () => {
     await waitFor(() => expect(searchListingCity).toHaveBeenCalledWith("", "PH", "500"));
   });
 
-  it("submits a created listing with parsed numbers and userId, then redirects", async () => {
+  it("submits a created listing as a flat snake_case payload, then redirects", async () => {
     createListing.mockResolvedValue({});
     render(<CreateListingForm />);
 
@@ -59,10 +59,11 @@ describe("CreateListingForm", () => {
     const [payload, path] = createListing.mock.calls[0];
     expect(payload).toMatchObject({
       title: "Nice flat",
-      userId: 1,
+      user_id: 1,
       price: 15000,
-      roomsNumber: 3,
-      location: expect.objectContaining({ addressLine1: "1 Rizal St", country: "PH" }),
+      rooms_number: 3,
+      address_line1: "1 Rizal St",
+      country: "PH",
     });
     expect(path).toBe("/listings");
     await waitFor(() => expect(push).toHaveBeenCalledWith("/listings"));
@@ -70,16 +71,21 @@ describe("CreateListingForm", () => {
 
   it("hydrates from the listing prop and updates on submit in edit mode", async () => {
     const listing = {
-      _id: "abc123",
-      userId: 7,
+      id: 42,
+      user_id: 7,
       title: "Old title",
       description: "Old desc",
       price: 9000,
-      roomsNumber: 2,
+      rooms_number: 2,
       type: 1,
-      houseType: 2,
+      house_type: 2,
       images: [],
-      location: { country: "PH", city: null, addressLine1: "Old addr", addressLine2: "" },
+      country: "PH",
+      city_id: null,
+      city_label: null,
+      admin_name1: null,
+      address_line1: "Old addr",
+      address_line2: "",
     } as unknown as IListing;
 
     updateListing.mockResolvedValue({});
@@ -95,9 +101,9 @@ describe("CreateListingForm", () => {
 
     await waitFor(() => expect(updateListing).toHaveBeenCalledTimes(1));
     const [id, payload, path] = updateListing.mock.calls[0];
-    expect(id).toBe("abc123");
-    expect(payload).toMatchObject({ title: "Old title", userId: 1, price: 9000, roomsNumber: 2 });
-    expect(path).toBe("/listings/abc123");
+    expect(id).toBe(42);
+    expect(payload).toMatchObject({ title: "Old title", user_id: 1, price: 9000, rooms_number: 2 });
+    expect(path).toBe("/listings/42");
     expect(createListing).not.toHaveBeenCalled();
   });
 });

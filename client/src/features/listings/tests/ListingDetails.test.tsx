@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import ListingDetails from "../ListingDetails";
-import type { IListing } from "@/lib/database/models/listing";
+import type { IListing } from "@/types/listings";
 
 vi.mock("next/image", () => ({
   // eslint-disable-next-line @next/next/no-img-element
@@ -11,10 +11,12 @@ vi.mock("next/image", () => ({
 const listing = {
   title: "Sea view condo",
   price: 25000,
-  roomsNumber: 2,
+  rooms_number: 2,
   description: "Bright unit near the bay.",
   images: ["a.jpg", "b.jpg", "c.jpg"],
-  location: { city: { label: "Cebu" }, addressLine1: "5 Osmena Blvd", addressLine2: "Tower B" },
+  city_label: "Cebu",
+  address_line1: "5 Osmena Blvd",
+  address_line2: "Tower B",
 } as unknown as IListing;
 
 describe("ListingDetails", () => {

@@ -7,13 +7,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `find-place` is a **monorepo** for a property-listings marketplace (Philippines audience).
 
 ```
-client/   Next.js 16 (App Router) + React 19 frontend + BFF   (source of truth today)
-server/   FastAPI backend skeleton (Python 3.13, uv)          (being stood up)
+client/   Next.js 16 (App Router) + React 19 — frontend + BFF (SSR/SEO, server-side API calls)
+server/   FastAPI (Python 3.13, uv) — business logic + data (Postgres/PostGIS)
 ```
 
 Each app is self-contained (own deps, own Dockerfile). They are separate compose stacks at runtime. `infra/` (docker-compose + Caddy) is not created yet.
 
-The frontend/backend contract will be REST: Next.js stays the frontend + BFF (SSR/SEO + server-side calls), FastAPI owns business logic and data. The current code still uses the older Next-server-actions + MongoDB path (below); migration to the FastAPI + Postgres/PostGIS backend is in progress.
+The frontend/backend contract is REST: Next.js is the frontend + BFF (SSR/SEO + server-side calls), FastAPI owns business logic and data. **Listings are fully migrated** to FastAPI + Postgres/PostGIS — the old Next-server-actions + MongoDB path was removed and `mongoose` uninstalled. Other domains (auth, search, stats) are not built yet.
 
 ## Commands
 
@@ -52,37 +52,37 @@ Stack: Next.js 16, React 19.2, TypeScript 5.9, Tailwind CSS v4, `@base-ui-compon
 - **Do not create empty folders ahead of need** (no empty `hooks/`). A `tests/` subfolder is expected wherever tested source lives (see Commands).
 - Decision rule: reused across features → `components/`; specific to one domain's view → `features/<domain>/`; non-view logic → the matching kind folder above.
 
-### Data flow (current — Mongo-backed)
+### Data flow
 
 Two distinct backend paths — don't confuse them:
 
-1. **Server Actions** (`src/lib/actions/listings.ts`, `"use server"`) — the primary way pages read/write MongoDB. `getListings`/`getListingById`/`createListing`/`updateListing` call Mongoose directly and `revalidatePath` after mutations. Server Components `await` them directly. Mongoose docs are serialized with `JSON.parse(JSON.stringify(...))` before crossing the server/client boundary.
-2. **Route Handlers** (`src/app/api/listings/*`) — proxies to external services: `route.ts` → GeoNames city search (`GEONAMES_USERNAME` kept server-side); `upload-image/route.ts` → Cloudinary. Reached over HTTP via `BACKEND_URL` (see `searchListingCity`/`uploadImage`), not called directly. ⚠️ `BACKEND_URL` must match the dev port (`3050`).
-
-`src/lib/database/index.ts` caches the Mongoose connection on `global`; always `await connectToDatabase()` in any action touching the DB. Connection string is assembled from `DB_USER`, `DB_USER_PASSWORD`, `DB_CLUSTER`, `DB_NAME`.
+1. **BFF actions → FastAPI** (`src/lib/actions/listings.ts`, `"use server"`) — the primary data path. `getListings`/`getListingById`/`createListing`/`updateListing` `fetch` the FastAPI REST API at **`API_URL`** (`http://127.0.0.1:8000` — 127.0.0.1 not `localhost`, because Docker squats IPv6 `:8000`). Server Components `await` them directly; mutations `revalidatePath`. Responses are plain JSON matching the API shape (no Mongoose serialization). The Mongoose connection and `src/lib/database/` were deleted in the migration.
+2. **Route Handlers** (`src/app/api/listings/*`) — proxies to external services: `route.ts` → GeoNames city search (`GEONAMES_USERNAME` kept server-side); `upload-image/route.ts` → Cloudinary. Reached over HTTP via `BACKEND_URL` (Next's own origin), not called directly. ⚠️ `BACKEND_URL` must match the dev port (`3050`).
 
 ### Data model
 
-`src/lib/database/models/listing.ts` defines the single `Listing` model (`models.Listing || model(...)` guard). Domain encoding used throughout:
+Listings are owned by the server: `server/app/db/models/listing.py` (SQLAlchemy) is the table; the client mirrors the API response as `IListing` in `src/types/listings.ts` — **snake_case, flat** (`city_label`, `rooms_number`, `house_type`, `latitude`/`longitude`), not the old nested `location` shape. Domain encoding used throughout:
 - `type`: 1 = Rent, 2 = Sale
-- `houseType`: 1 = Apartment, 2 = House
+- `house_type`: 1 = Apartment, 2 = House
 
-These id→label maps live once in **`src/constants/listings.ts`** (`ListingTypes`, `PropertyTypes`, `Countries`) — import them, never re-declare inline. Listing filtering in `listings/page.tsx` queries nested fields with dotted keys like `"location.city.label"`.
+These id→label maps live once in **`src/constants/listings.ts`** (`ListingTypes`, `PropertyTypes`, `Countries`) — import them, never re-declare inline. The listings page filters via **query params** (`type`/`houseType`/`city`/`userId`) passed to `getListings`, which maps them to the API's `type`/`house_type`/`city`/`user_id` filters.
 
 ### Forms
 
-`features/listings/forms/CreateListingForm.tsx` is a client component using `react-hook-form` + `Controller` around the `ui/` primitives. Serves create and edit via the `type` prop; edit hydrates via `setValue` in a `useEffect`. Form value types are in `src/types/listings.ts` (`IListingFormValues`, `ICityOption`) — `useForm<IListingFormValues>()` must be typed or `city: null` in `defaultValues` breaks hydration. Base UI's `Autocomplete` calls `onChange(value)` (single arg), not `(event, value)`.
+`features/listings/forms/CreateListingForm.tsx` is a client component using `react-hook-form` + `Controller` around the `ui/` primitives. Serves create and edit via the `type` prop; edit hydrates via `setValue` in a `useEffect`. Its **internal** form shape stays nested (`IListingFormValues`/`ICityOption` in `src/types/listings.ts`, kept because the city autocomplete works with `ICityOption`); on submit it is flattened to the API's snake_case `IListingPayload`, and edit hydrates from the flat `IListing`. `useForm<IListingFormValues>()` must be typed or `city: null` in `defaultValues` breaks hydration. Base UI's `Autocomplete` calls `onChange(value)` (single arg), not `(event, value)`.
 
 ## Server
 
-FastAPI skeleton under `server/app/`, layered: **routes → services → repositories → db**. Boundary rule: nothing above the repository writes SQL; nothing below the service knows about HTTP. `config.py` is pydantic-settings; `db/session.py` is async SQLAlchemy. Targets Postgres/PostGIS via SQLAlchemy 2 (async) + Alembic. Managed by `uv` (auto-provisions Python ≥3.13). Runtime deps installed; `ruff` (dev) pending a re-sync.
+FastAPI under `server/app/`, layered: **routes → services → repositories → db**. Boundary rule: nothing above the repository writes SQL; nothing below the service knows about HTTP. `config.py` is pydantic-settings; `db/session.py` is async SQLAlchemy; ORM models in `db/models/`, Pydantic schemas in `schemas/`. Postgres/PostGIS via SQLAlchemy 2 (async) + Alembic (`geoalchemy2` for geometry). Managed by `uv` (auto-provisions Python ≥3.13).
+
+**Listings** is the first full feature slice (`app/{repositories,services,api/routes}/listings.py`): `GET /listings` (filters `type`/`house_type`/`user_id`/`city` + `limit`/`offset`), `GET /{id}`, `POST` (201), `PATCH` (partial via `exclude_unset`), `DELETE` (204). The `geom geometry(Point,4326)` column is built from lat/lng in the repository (shapely `from_shape`); `latitude`/`longitude` are read-only `@property`s. Local DB is native arm64 **pg17 + PostGIS** (port per `server/.env` `DATABASE_URL`, currently `5434` to dodge a Docker/pg16 clash on 5432–5433). Migrations: `uv run alembic upgrade head` / `--autogenerate`.
 
 ## Conventions & gotchas
 
 - **ESLint is flat config** (`client/eslint.config.mjs`) spreading `eslint-config-next`'s native array. Custom rules (scoped to `**/*.ts,tsx`): `@typescript-eslint/no-explicit-any` off; unused vars/args prefixed `_` ignored.
 - **Pinned-below-latest on purpose:** TypeScript stays on **5.9** (TS 7 crashes `typescript-eslint`); ESLint on **9** (ESLint 10 breaks `eslint-config-next` and needs Node 24). Base UI stays on `@base-ui-components/react` (renamed upstream to `@base-ui/react`; migration deferred — it touches the autocomplete/select APIs, and the autocomplete is being reworked for Google Places).
 - **Tailwind v4** — CSS-first: `@import "tailwindcss"` + `@theme` in `globals.css`, `@tailwindcss/postcss` in `postcss.config.mjs`. No `tailwind.config.ts`.
-- Secrets live in `client/.env` (Mongo, Cloudinary, GeoNames, `BACKEND_URL`) — committed but values must stay server-side; expose only via Route Handlers/Server Actions. `server/.env` is git-ignored (see `.env.example`).
+- Secrets live in `client/.env` (Cloudinary, GeoNames, `BACKEND_URL`, `API_URL`) — committed but values must stay server-side; expose only via Route Handlers/BFF actions. `server/.env` is git-ignored (`DATABASE_URL`; see `.env.example`).
 - Cloudinary images: `res.cloudinary.com` is whitelisted via `images.remotePatterns` in `client/next.config.mjs`.
 
 ## Product direction (not yet built)

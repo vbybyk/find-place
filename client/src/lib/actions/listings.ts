@@ -1,55 +1,77 @@
 "use server";
 
-import { connectToDatabase } from "../database";
 import { revalidatePath } from "next/cache";
-import Listing, { IListing } from "../database/models/listing";
 import { formatGeoCities } from "../utils";
+import { IListing, IListingPayload } from "@/types/listings";
 
+// FastAPI backend (business logic + data).
+const API_URL = process.env.API_URL;
+// Next.js own origin — used for the Cloudinary/GeoNames proxy route handlers.
 const BACKEND_URL = process.env.BACKEND_URL;
 
-export const getListings = async (queryParams) => {
-  try {
-    await connectToDatabase();
+interface IListingsQuery {
+  type?: string;
+  houseType?: string;
+  userId?: string;
+  city?: string;
+}
 
-    const listings = await Listing.find(queryParams);
-    return listings;
+export const getListings = async (query: IListingsQuery = {}): Promise<IListing[]> => {
+  const params = new URLSearchParams();
+  if (query.type) params.set("type", query.type);
+  if (query.houseType) params.set("house_type", query.houseType);
+  if (query.userId) params.set("user_id", query.userId);
+  if (query.city) params.set("city", query.city);
+
+  try {
+    const res = await fetch(`${API_URL}/listings?${params.toString()}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Failed to fetch listings: ${res.status}`);
+    return await res.json();
   } catch (error) {
     console.error("Error while getting listings", error);
+    return [];
   }
 };
 
-export const getListingById = async (id: string) => {
+export const getListingById = async (id: string): Promise<IListing | null> => {
   try {
-    await connectToDatabase();
-
-    const listing = await Listing.findById(id);
-    return JSON.parse(JSON.stringify(listing));
+    const res = await fetch(`${API_URL}/listings/${id}`, { cache: "no-store" });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Failed to fetch listing: ${res.status}`);
+    return await res.json();
   } catch (error) {
     console.error("Error while getting listing by id", error);
+    return null;
   }
 };
 
-export const createListing = async (listing: Partial<IListing>, path: string) => {
+export const createListing = async (listing: IListingPayload, path: string) => {
   try {
-    await connectToDatabase();
-
-    const newListing = await Listing.create(listing);
+    const res = await fetch(`${API_URL}/listings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(listing),
+    });
+    if (!res.ok) throw new Error(`Failed to create listing: ${res.status}`);
+    const data = await res.json();
     revalidatePath(path);
-
-    return JSON.parse(JSON.stringify(newListing));
+    return data;
   } catch (error) {
     console.error("Error while creating listing", error);
   }
 };
 
-export const updateListing = async (id: string, listing: Partial<IListing>, path: string) => {
+export const updateListing = async (id: number, listing: Partial<IListingPayload>, path: string) => {
   try {
-    await connectToDatabase();
-
-    const updatedListing = await Listing.findByIdAndUpdate(id, listing, { new: true });
+    const res = await fetch(`${API_URL}/listings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(listing),
+    });
+    if (!res.ok) throw new Error(`Failed to update listing: ${res.status}`);
+    const data = await res.json();
     revalidatePath(path);
-
-    return JSON.parse(JSON.stringify(updatedListing));
+    return data;
   } catch (error) {
     console.error("Error while updating listing", error);
   }
