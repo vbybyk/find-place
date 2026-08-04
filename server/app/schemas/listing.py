@@ -23,9 +23,11 @@ class ListingRead(BaseModel):
     house_type: int
 
     country: str | None = None
-    city_id: int | None = None
+    place_id: str | None = None
     city_label: str | None = None
     admin_name1: str | None = None
+    barangay: str | None = None
+    postal_code: str | None = None
     address_line1: str | None = None
     address_line2: str | None = None
 
@@ -53,9 +55,11 @@ class ListingCreate(BaseModel):
 
     price: float | None = None
     country: str | None = None
-    city_id: int | None = None
+    place_id: str | None = None
     city_label: str | None = None
     admin_name1: str | None = None
+    barangay: str | None = None
+    postal_code: str | None = None
     address_line1: str | None = None
     address_line2: str | None = None
     latitude: float | None = None
@@ -81,9 +85,11 @@ class ListingUpdate(BaseModel):
     house_type: int | None = None
     price: float | None = None
     country: str | None = None
-    city_id: int | None = None
+    place_id: str | None = None
     city_label: str | None = None
     admin_name1: str | None = None
+    barangay: str | None = None
+    postal_code: str | None = None
     address_line1: str | None = None
     address_line2: str | None = None
     latitude: float | None = None

@@ -9,7 +9,6 @@ import {
   getListingById,
   createListing,
   updateListing,
-  searchListingCity,
   uploadImage,
 } from "../listings";
 
@@ -91,27 +90,6 @@ describe("updateListing", () => {
     expect((opts as RequestInit).method).toBe("PATCH");
     expect(revalidatePath).toHaveBeenCalledWith("/listings/9");
     expect(result).toEqual({ id: 9, title: "upd" });
-  });
-});
-
-describe("searchListingCity", () => {
-  it("fetches geonames and formats them via formatGeoCities", async () => {
-    const geonames = [
-      { name: "Manila", geonameId: 1, adminName1: "NCR", population: 100, fclName: "city, village,..." },
-      { name: "Zero", geonameId: 2, adminName1: "X", population: 0, fclName: "city, village,..." },
-    ];
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ geonames }) })
-    );
-
-    const result = await searchListingCity("man", "PH", "500");
-    expect(result).toEqual([{ label: "Manila", id: 1, adminName1: "NCR" }]);
-  });
-
-  it("returns undefined on a non-ok response", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
-    expect(await searchListingCity("x", "PH", "500")).toBeUndefined();
   });
 });
 

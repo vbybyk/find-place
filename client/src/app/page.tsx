@@ -1,71 +1,40 @@
 "use client";
-import { useState, useEffect, SyntheticEvent } from "react";
+import { SyntheticEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { searchListingCity } from "@/lib/actions/listings";
 import Autocomplete from "@/components/ui/autocomplete";
-
-interface ISearchValue {
-  id: number;
-  label: string;
-  adminName1: string;
-}
-
-const debouncedSearch = (search: string, delay: number) => {
-  let timeoutId: NodeJS.Timeout;
-  return new Promise((resolve) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => {
-      resolve(search);
-    }, delay);
-  });
-};
+import { usePlaceAutocomplete } from "@/hooks/places";
+import { IPlaceSuggestion } from "@/types/places";
 
 export default function Home() {
-  const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<ISearchValue[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [value, setValue] = useState<ISearchValue | null>(null);
-
   const router = useRouter();
+  const { suggestions, loading, search } = usePlaceAutocomplete({
+    includedPrimaryTypes: ["locality", "administrative_area_level_2"],
+  });
+  const [input, setInput] = useState("");
+  const [selected, setSelected] = useState<IPlaceSuggestion | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const onInputChange = (e: SyntheticEvent<Element, Event>, value: string) => {
-    if (value === undefined) return;
-    setSearch(value);
-    if (!value) {
-      setValue(null);
-    }
+  useEffect(() => {
+    if (!input || selected?.label === input) return;
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => search(input), 250);
+    return () => clearTimeout(debounceRef.current);
+  }, [input, selected, search]);
+
+  const onInputChange = (_e: SyntheticEvent, value: string) => {
+    setInput(value);
+    if (!value) setSelected(null);
   };
 
-  const onSelectChange = (value: ISearchValue) => {
-    if (value) {
-      setValue(value);
-      setSearch(value?.label);
-    }
+  const onSelect = (option: IPlaceSuggestion | null) => {
+    setSelected(option);
+    if (option) setInput(option.label);
   };
 
   const onClickSearch = () => {
-    router.push(`/listings?city=${value?.label}&adminName1=${value?.adminName1}`);
+    const city = selected?.label ?? input;
+    if (city) router.push(`/listings?city=${encodeURIComponent(city)}`);
   };
-
-  const getSearchResults = async (search: string) => {
-    setIsLoading(true);
-    const delay = 200;
-    const debouncedValue = await debouncedSearch(search, delay);
-    try {
-      const result = await searchListingCity(debouncedValue as string, "PH", "20");
-      setSearchResults(result);
-    } catch (error) {
-      console.error("Error while searching city", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (search) {
-      getSearchResults(search);
-    }
-  }, [search]);
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -77,14 +46,14 @@ export default function Home() {
         </ol>
         <div className="flex w-full ">
           <Autocomplete
-            options={searchResults}
-            inputValue={search}
+            options={suggestions}
+            inputValue={input}
             onInputChange={onInputChange}
-            value={value}
-            onChange={onSelectChange}
+            value={selected}
+            onChange={onSelect}
             className="w-full grow shrink-0 basis-auto h-12 px-4 text-lg rounded-l-lg"
-            loading={isLoading}
-            readOnly={!!value}
+            loading={loading}
+            readOnly={!!selected}
           />
           <button
             className="px-5 py-1 text-lg font-medium text-white bg-black/[.8] dark:bg-white/[.8] rounded-e-md"

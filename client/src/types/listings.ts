@@ -1,9 +1,3 @@
-export interface ICityOption {
-  id: number;
-  label: string;
-  adminName1?: string;
-}
-
 export interface IListing {
   id: number;
   user_id: number;
@@ -13,9 +7,11 @@ export interface IListing {
   type: number;
   house_type: number;
   country: string | null;
-  city_id: number | null;
+  place_id: string | null;
   city_label: string | null;
   admin_name1: string | null;
+  barangay: string | null;
+  postal_code: string | null;
   address_line1: string | null;
   address_line2: string | null;
   latitude: number | null;
@@ -36,11 +32,15 @@ export interface IListingPayload {
   house_type: number;
   price?: number | null;
   country?: string | null;
-  city_id?: number | null;
+  place_id?: string | null;
   city_label?: string | null;
   admin_name1?: string | null;
+  barangay?: string | null;
+  postal_code?: string | null;
   address_line1?: string | null;
   address_line2?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   rooms_number?: number | null;
   images?: string[] | null;
 }
@@ -55,9 +55,15 @@ export interface IListingFormValues {
   houseType: number;
   images: string[];
   location: {
+    placeId: string | null;
     country: string;
-    city: ICityOption | null;
+    city: string;
+    admin1: string;
+    barangay: string;
+    postalCode: string;
     addressLine1: string;
     addressLine2: string;
+    latitude: number | null;
+    longitude: number | null;
   };
 }

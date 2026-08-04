@@ -1,17 +1,18 @@
 "use client";
 
-import { SyntheticEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Select from "@/components/ui/select";
-import Autocomplete from "@/components/ui/autocomplete";
 import FileUploader from "@/features/listings/FileUploader";
+import LocationPicker from "@/features/listings/LocationPicker";
 import Spinner from "@/components/ui/spinner";
-import { createListing, updateListing, searchListingCity } from "@/lib/actions/listings";
+import { createListing, updateListing } from "@/lib/actions/listings";
 import { ListingTypes, PropertyTypes, Countries } from "@/constants/listings";
-import { ICityOption, IListing, IListingFormValues, IListingPayload } from "@/types/listings";
+import { IListing, IListingFormValues, IListingPayload } from "@/types/listings";
+import { IResolvedPlace } from "@/types/places";
 
 interface IProps {
   listing?: IListing;
@@ -20,8 +21,6 @@ interface IProps {
 
 const CreateListingForm = (props: IProps) => {
   const router = useRouter();
-  const [citiesOptions, setCitiesOptions] = useState<ICityOption[]>([]);
-  const [cityInput, setCityInput] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
   const { control, handleSubmit, setValue, watch } = useForm<IListingFormValues>({
@@ -36,10 +35,16 @@ const CreateListingForm = (props: IProps) => {
       houseType: 0,
       images: [] as string[],
       location: {
+        placeId: null,
         country: "PH",
-        city: null,
+        city: "",
+        admin1: "",
+        barangay: "",
+        postalCode: "",
         addressLine1: "",
         addressLine2: "",
+        latitude: null,
+        longitude: null,
       },
     },
   });
@@ -58,45 +63,40 @@ const CreateListingForm = (props: IProps) => {
         setValue("images", l.images);
       }
       setValue("location", {
+        placeId: l.place_id ?? null,
         country: l.country ?? "PH",
-        city:
-          l.city_id != null
-            ? { id: l.city_id, label: l.city_label ?? "", adminName1: l.admin_name1 ?? undefined }
-            : null,
+        city: l.city_label ?? "",
+        admin1: l.admin_name1 ?? "",
+        barangay: l.barangay ?? "",
+        postalCode: l.postal_code ?? "",
         addressLine1: l.address_line1 ?? "",
         addressLine2: l.address_line2 ?? "",
+        latitude: l.latitude ?? null,
+        longitude: l.longitude ?? null,
       });
-      if (l.city_label) {
-        setCityInput(l.city_label);
-      }
     }
   }, [props.listing]);
 
   const images = watch("images");
-  const country = watch("location.country");
+  const latitude = watch("location.latitude");
+  const longitude = watch("location.longitude");
 
-  const getSitiesOptions = async (country: string) => {
-    const result = await searchListingCity("", country, "500");
-    setCitiesOptions(result);
+  const handleResolve = (place: IResolvedPlace) => {
+    setValue("location.placeId", place.placeId);
+    if (place.country) setValue("location.country", place.country);
+    setValue("location.city", place.city ?? "");
+    setValue("location.admin1", place.admin1 ?? "");
+    setValue("location.barangay", place.barangay ?? "");
+    setValue("location.postalCode", place.postalCode ?? "");
+    setValue("location.addressLine1", place.addressLine1 ?? "");
+    setValue("location.latitude", place.latitude);
+    setValue("location.longitude", place.longitude);
   };
 
-  useEffect(() => {
-    if (country) {
-      getSitiesOptions(country);
-    }
-  }, [country]);
-
-  const onCityInputChange = (_e: SyntheticEvent<Element, Event>, value: string) => {
-    if (value !== cityInput) {
-      setCityInput(value);
-    }
-  };
-
-  const handleCityChange = (value: ICityOption | null) => {
-    if (value && value.label !== cityInput) {
-      setCityInput(value.label);
-      setValue("location.city", value);
-    }
+  // Dragging the map pin adjusts only the coordinates.
+  const handlePinChange = (lat: number, lng: number) => {
+    setValue("location.latitude", lat);
+    setValue("location.longitude", lng);
   };
 
   const onSubmit = async (data: IListingFormValues) => {
@@ -109,11 +109,15 @@ const CreateListingForm = (props: IProps) => {
       price: data.price ? Number(data.price) : null,
       rooms_number: data.roomsNumber ? Number(data.roomsNumber) : null,
       country: data.location.country || null,
-      city_id: data.location.city?.id ?? null,
-      city_label: data.location.city?.label ?? null,
-      admin_name1: data.location.city?.adminName1 ?? null,
+      place_id: data.location.placeId,
+      city_label: data.location.city || null,
+      admin_name1: data.location.admin1 || null,
+      barangay: data.location.barangay || null,
+      postal_code: data.location.postalCode || null,
       address_line1: data.location.addressLine1 || null,
       address_line2: data.location.addressLine2 || null,
+      latitude: data.location.latitude,
+      longitude: data.location.longitude,
       images: data.images ?? [],
     };
     try {
@@ -181,8 +185,15 @@ const CreateListingForm = (props: IProps) => {
         </button>
       </div>
       <div className="flex flex-col gap-4">
+        <LocationPicker
+          latitude={latitude}
+          longitude={longitude}
+          initialAddress={props.listing?.address_line1 ?? ""}
+          onResolve={handleResolve}
+          onPinChange={handlePinChange}
+        />
         <div>
-          <label htmlFor="location">Country</label>
+          <label htmlFor="country">Country</label>
           <Controller
             name="location.country"
             control={control}
@@ -190,20 +201,20 @@ const CreateListingForm = (props: IProps) => {
           />
         </div>
         <div>
-          <label htmlFor="location">City</label>
-          <Controller
-            name="location.city"
-            control={control}
-            render={({ field }) => (
-              <Autocomplete
-                {...field}
-                options={citiesOptions}
-                inputValue={cityInput}
-                onInputChange={onCityInputChange}
-                onChange={handleCityChange}
-              />
-            )}
-          />
+          <label htmlFor="city">City / Municipality</label>
+          <Controller name="location.city" control={control} render={({ field }) => <Input {...field} />} />
+        </div>
+        <div>
+          <label htmlFor="admin1">Province</label>
+          <Controller name="location.admin1" control={control} render={({ field }) => <Input {...field} />} />
+        </div>
+        <div>
+          <label htmlFor="barangay">Barangay</label>
+          <Controller name="location.barangay" control={control} render={({ field }) => <Input {...field} />} />
+        </div>
+        <div>
+          <label htmlFor="postalCode">Postal code</label>
+          <Controller name="location.postalCode" control={control} render={({ field }) => <Input {...field} />} />
         </div>
         <div>
           <label htmlFor="addressLine1">Address Line 1</label>

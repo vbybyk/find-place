@@ -6,14 +6,17 @@ import type { IListing } from "@/types/listings";
 
 const createListing = vi.fn();
 const updateListing = vi.fn();
-const searchListingCity = vi.fn();
 const push = vi.fn();
 
 vi.mock("@/lib/actions/listings", () => ({
   createListing: (...a: unknown[]) => createListing(...a),
   updateListing: (...a: unknown[]) => updateListing(...a),
-  searchListingCity: (...a: unknown[]) => searchListingCity(...a),
   uploadImage: vi.fn(),
+}));
+
+// LocationPicker pulls in the Google Maps SDK — stub it so the form renders in jsdom.
+vi.mock("@/features/listings/LocationPicker", () => ({
+  default: () => null,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -30,18 +33,12 @@ describe("CreateListingForm", () => {
   beforeEach(() => {
     createListing.mockReset();
     updateListing.mockReset();
-    searchListingCity.mockReset().mockResolvedValue([]);
     push.mockReset();
   });
 
   it("renders the create form with a Submit button", () => {
     render(<CreateListingForm />);
     expect(screen.getByRole("button", { name: /submit/i })).toBeInTheDocument();
-  });
-
-  it("loads city options for the default country on mount", async () => {
-    render(<CreateListingForm />);
-    await waitFor(() => expect(searchListingCity).toHaveBeenCalledWith("", "PH", "500"));
   });
 
   it("submits a created listing as a flat snake_case payload, then redirects", async () => {
@@ -81,11 +78,15 @@ describe("CreateListingForm", () => {
       house_type: 2,
       images: [],
       country: "PH",
-      city_id: null,
-      city_label: null,
-      admin_name1: null,
+      place_id: "ChIJ_old",
+      city_label: "Cebu",
+      admin_name1: "Cebu",
+      barangay: null,
+      postal_code: "6000",
       address_line1: "Old addr",
       address_line2: "",
+      latitude: 10.3,
+      longitude: 123.9,
     } as unknown as IListing;
 
     updateListing.mockResolvedValue({});
@@ -102,7 +103,15 @@ describe("CreateListingForm", () => {
     await waitFor(() => expect(updateListing).toHaveBeenCalledTimes(1));
     const [id, payload, path] = updateListing.mock.calls[0];
     expect(id).toBe(42);
-    expect(payload).toMatchObject({ title: "Old title", user_id: 1, price: 9000, rooms_number: 2 });
+    expect(payload).toMatchObject({
+      title: "Old title",
+      user_id: 1,
+      price: 9000,
+      rooms_number: 2,
+      place_id: "ChIJ_old",
+      city_label: "Cebu",
+      postal_code: "6000",
+    });
     expect(path).toBe("/listings/42");
     expect(createListing).not.toHaveBeenCalled();
   });

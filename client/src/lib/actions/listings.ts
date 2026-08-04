@@ -1,12 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { formatGeoCities } from "../utils";
 import { IListing, IListingPayload } from "@/types/listings";
 
 // FastAPI backend (business logic + data).
 const API_URL = process.env.API_URL;
-// Next.js own origin — used for the Cloudinary/GeoNames proxy route handlers.
+// Next.js own origin — used for the Cloudinary image-upload proxy route handler.
 const BACKEND_URL = process.env.BACKEND_URL;
 
 interface IListingsQuery {
@@ -99,19 +98,5 @@ export const uploadImage = async (formData: FormData) => {
     }
   } catch (error) {
     console.error("Error while uploading image", error);
-  }
-};
-
-export const searchListingCity = async (search: string, country: string, maxRows: string) => {
-  try {
-    const response = await fetch(
-      `${BACKEND_URL}/api/listings?maxRows=${maxRows}&country=${country}&name_startsWith=${search}`
-    );
-    if (response.ok) {
-      const data = await response.json();
-      return formatGeoCities(data);
-    }
-  } catch (error) {
-    console.error("Error while searching city", error);
   }
 };

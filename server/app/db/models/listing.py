@@ -33,11 +33,13 @@ class Listing(Base):
     type: Mapped[int] = mapped_column(Integer, nullable=False)  # 1 = Rent, 2 = Sale
     house_type: Mapped[int] = mapped_column(Integer, nullable=False)  # 1 = Apartment, 2 = House
 
-    # --- location (flattened) ---
+    # --- location (flattened, sourced from Google Places) ---
     country: Mapped[str | None] = mapped_column(String(2), nullable=True)  # ISO code, e.g. "PH"
-    city_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    city_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    admin_name1: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    place_id: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Google place_id
+    city_label: Mapped[str | None] = mapped_column(String(120), nullable=True)  # locality
+    admin_name1: Mapped[str | None] = mapped_column(String(120), nullable=True)  # province
+    barangay: Mapped[str | None] = mapped_column(String(120), nullable=True)  # sub-locality
+    postal_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
     address_line1: Mapped[str | None] = mapped_column(String(200), nullable=True)
     address_line2: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
