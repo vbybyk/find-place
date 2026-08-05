@@ -6,6 +6,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "res.cloudinary.com",
       },
+      {
+        // Seed/demo listing photos. Real uploads still go through Cloudinary.
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
     ],
   },
   typescript: {
