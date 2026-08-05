@@ -19,7 +19,7 @@ const Listing = async ({
   }
 
   return (
-    <div className="p-8">
+    <div className="py-8">
       {userId && <h1 className="text-lg font-semibold">{listing.title}</h1>}
       {userId ? <CreateListingForm listing={listing} type="edit" /> : <ListingDetails listing={listing} />}
     </div>

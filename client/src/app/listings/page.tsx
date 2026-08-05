@@ -24,7 +24,7 @@ const ListingsPage = async ({ searchParams }: { searchParams: Promise<ISearchPar
   const query = userId ? `?userId=${userId}` : "";
 
   return (
-    <div className="p-6">
+    <div className="py-6">
       <div className="mb-4 flex gap-4">
         <FilterSelect options={ListingTypes} queryKey="type" placeholder="Select Listings Type" />
         <FilterSelect options={PropertyTypes} queryKey="houseType" placeholder="Select House Type" />

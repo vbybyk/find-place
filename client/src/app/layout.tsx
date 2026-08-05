@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import Header from "@/components/header";
 import GoogleMapsProvider from "@/components/GoogleMapsProvider";
+import Container from "@/components/Container";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,7 +23,9 @@ export default function RootLayout({
       >
         <GoogleMapsProvider>
           <Header />
-          {children}
+          <main>
+            <Container>{children}</Container>
+          </main>
         </GoogleMapsProvider>
       </body>
     </html>

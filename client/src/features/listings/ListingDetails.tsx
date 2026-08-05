@@ -1,31 +1,20 @@
-import Image from "next/image";
 import { IListing } from "@/types/listings";
+import ListingGallery from "@/features/listings/ListingGallery";
 
 const ListingDetails = ({ listing }: { listing: IListing }) => {
   return (
-    <div className="px-4">
-      <div className="grid gap-4 grid-cols-4 grid-rows-2 mb-4">
-        {listing?.images?.map((image, index) => (
-          <div key={image} className={`relative ${index === 0 ? "col-span-2 row-span-2 h-96" : ""}`}>
-            <Image
-              key={image}
-              src={image}
-              alt={listing.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          </div>
-        ))}
+    <div>
+      <ListingGallery images={listing?.images} title={listing?.title} />
+      <div className="mt-6">
+        <h1 className="text-2xl font-semibold">{listing?.title}</h1>
+        <h2 className="text-lg font-semibold">{listing?.price}₱</h2>
+        <p className="text-gray-600">
+          {listing?.city_label}, {listing?.address_line1}, {listing?.address_line2}
+        </p>
+        <p className="mt-1">Rooms: {listing?.rooms_number}</p>
+        <h3 className="mt-4 text-base font-semibold">Description</h3>
+        <p>{listing?.description}</p>
       </div>
-      <h1 className="text-xl font-semibold">{listing?.title}</h1>
-      <h2 className="text-lg font-semibold">{listing?.price}₱</h2>
-      <p>
-        {listing?.city_label}, {listing?.address_line1}, {listing?.address_line2}
-      </p>
-      <p>Rooms: {listing?.rooms_number}</p>
-      <h3 className="text-base font-semibold mt-4">Description</h3>
-      <p>{listing?.description}</p>
     </div>
   );
 };

@@ -3,9 +3,9 @@ import { render, screen } from "@testing-library/react";
 import ListingDetails from "../ListingDetails";
 import type { IListing } from "@/types/listings";
 
-vi.mock("next/image", () => ({
-  // eslint-disable-next-line @next/next/no-img-element
-  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
+// The gallery pulls in next/image + Base UI Dialog — stub it and test it separately.
+vi.mock("@/features/listings/ListingGallery", () => ({
+  default: ({ title }: { title: string }) => <div data-testid="gallery">{title}</div>,
 }));
 
 const listing = {
@@ -28,21 +28,13 @@ describe("ListingDetails", () => {
     expect(screen.getByText("Bright unit near the bay.")).toBeInTheDocument();
   });
 
-  it("renders one image per entry in images", () => {
+  it("renders the gallery for the listing", () => {
     render(<ListingDetails listing={listing} />);
-    const imgs = screen.getAllByRole("img", { name: "Sea view condo" });
-    expect(imgs).toHaveLength(3);
-    expect(imgs[0]).toHaveAttribute("src", "a.jpg");
+    expect(screen.getByTestId("gallery")).toHaveTextContent("Sea view condo");
   });
 
   it("composes the location line", () => {
     render(<ListingDetails listing={listing} />);
     expect(screen.getByText("Cebu, 5 Osmena Blvd, Tower B")).toBeInTheDocument();
-  });
-
-  it("renders without crashing when images is missing", () => {
-    render(<ListingDetails listing={{ ...listing, images: undefined } as unknown as IListing} />);
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Sea view condo" })).toBeInTheDocument();
   });
 });
