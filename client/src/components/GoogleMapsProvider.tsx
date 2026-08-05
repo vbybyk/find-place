@@ -7,7 +7,13 @@ const GoogleMapsProvider = ({ children }: { children: React.ReactNode }) => {
 
   if (!apiKey) return <>{children}</>;
 
-  return <APIProvider apiKey={apiKey}>{children}</APIProvider>;
+  // `language`/`region` pin the map + Places labels; without them Google infers
+  // language from the browser locale (which is why it can show up in Russian).
+  return (
+    <APIProvider apiKey={apiKey} language="en" region="PH">
+      {children}
+    </APIProvider>
+  );
 };
 
 export default GoogleMapsProvider;
