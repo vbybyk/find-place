@@ -89,16 +89,16 @@ const ListingGallery = ({ images, title }: IProps) => {
             src={imgs[0]}
             alt={alt(0)}
             onClick={() => openAt(0)}
-            sizes="60vw"
+            sizes="(max-width: 767px) 1px, 60vw"
             priority
             className="col-span-2 row-span-2"
           />
-          <Tile src={imgs[1]} alt={alt(1)} onClick={() => openAt(1)} sizes="30vw" />
-          <Tile src={imgs[2]} alt={alt(2)} onClick={() => openAt(2)} sizes="30vw" />
+          <Tile src={imgs[1]} alt={alt(1)} onClick={() => openAt(1)} sizes="(max-width: 767px) 1px, 30vw" />
+          <Tile src={imgs[2]} alt={alt(2)} onClick={() => openAt(2)} sizes="(max-width: 767px) 1px, 30vw" />
         </div>
         <div className="grid h-[116px] gap-2" style={{ gridTemplateColumns: `repeat(${bottom.length}, 1fr)` }}>
           {bottom.map((src, i) => (
-            <Tile key={src} src={src} alt={alt(i + 3)} onClick={() => openAt(i + 3)} sizes="20vw" />
+            <Tile key={src} src={src} alt={alt(i + 3)} onClick={() => openAt(i + 3)} sizes="(max-width: 767px) 1px, 20vw" />
           ))}
         </div>
       </div>
@@ -106,23 +106,23 @@ const ListingGallery = ({ images, title }: IProps) => {
   } else if (count === 1) {
     mosaic = (
       <div className="h-[380px]">
-        <Tile src={imgs[0]} alt={alt(0)} onClick={() => openAt(0)} sizes="1120px" priority className="h-full w-full" />
+        <Tile src={imgs[0]} alt={alt(0)} onClick={() => openAt(0)} sizes="(max-width: 767px) 1px, 1120px" priority className="h-full w-full" />
       </div>
     );
   } else if (count === 2) {
     mosaic = (
       <div className="grid h-[360px] grid-cols-2 gap-2">
         {imgs.map((src, i) => (
-          <Tile key={src} src={src} alt={alt(i)} onClick={() => openAt(i)} sizes="50vw" priority={i === 0} />
+          <Tile key={src} src={src} alt={alt(i)} onClick={() => openAt(i)} sizes="(max-width: 767px) 1px, 50vw" priority={i === 0} />
         ))}
       </div>
     );
   } else if (count === 3) {
     mosaic = (
       <div className="grid h-[360px] grid-cols-2 grid-rows-2 gap-2">
-        <Tile src={imgs[0]} alt={alt(0)} onClick={() => openAt(0)} sizes="50vw" priority className="row-span-2" />
-        <Tile src={imgs[1]} alt={alt(1)} onClick={() => openAt(1)} sizes="50vw" />
-        <Tile src={imgs[2]} alt={alt(2)} onClick={() => openAt(2)} sizes="50vw" />
+        <Tile src={imgs[0]} alt={alt(0)} onClick={() => openAt(0)} sizes="(max-width: 767px) 1px, 50vw" priority className="row-span-2" />
+        <Tile src={imgs[1]} alt={alt(1)} onClick={() => openAt(1)} sizes="(max-width: 767px) 1px, 50vw" />
+        <Tile src={imgs[2]} alt={alt(2)} onClick={() => openAt(2)} sizes="(max-width: 767px) 1px, 50vw" />
       </div>
     );
   } else {
@@ -130,7 +130,7 @@ const ListingGallery = ({ images, title }: IProps) => {
     mosaic = (
       <div className="grid h-[360px] grid-cols-2 grid-rows-2 gap-2">
         {imgs.map((src, i) => (
-          <Tile key={src} src={src} alt={alt(i)} onClick={() => openAt(i)} sizes="50vw" priority={i === 0} />
+          <Tile key={src} src={src} alt={alt(i)} onClick={() => openAt(i)} sizes="(max-width: 767px) 1px, 50vw" priority={i === 0} />
         ))}
       </div>
     );
@@ -167,7 +167,14 @@ const ListingGallery = ({ images, title }: IProps) => {
               onClick={() => openAt(i)}
               className="relative aspect-[4/3] w-full shrink-0 snap-center bg-gray-100"
             >
-              <Image src={src} alt={alt(i)} fill sizes="100vw" priority={i === 0} className="object-cover" />
+              <Image
+                src={src}
+                alt={alt(i)}
+                fill
+                sizes="(min-width: 768px) 1px, 100vw"
+                priority={i === 0}
+                className="object-cover"
+              />
             </button>
           ))}
         </div>
@@ -216,7 +223,14 @@ const ListingGallery = ({ images, title }: IProps) => {
                 </button>
               )}
               <div className="relative h-full w-full max-w-5xl">
-                <Image src={imgs[index]} alt={alt(index)} fill sizes="100vw" className="object-contain" priority />
+                <Image
+                  src={imgs[index]}
+                  alt={alt(index)}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 1024px"
+                  className="object-contain"
+                  priority
+                />
               </div>
               {count > 1 && (
                 <button

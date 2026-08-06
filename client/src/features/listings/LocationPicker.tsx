@@ -1,7 +1,7 @@
 "use client";
 
 import { SyntheticEvent, useEffect, useRef, useState } from "react";
-import { Map, AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
+import { Map, AdvancedMarker, Pin, useMap } from "@vis.gl/react-google-maps";
 import Autocomplete from "@/components/ui/autocomplete";
 import { usePlaceAutocomplete } from "@/hooks/places";
 import { IPlaceSuggestion, IResolvedPlace } from "@/types/places";
@@ -19,7 +19,7 @@ const DEFAULT_CENTER = { lat: 14.5995, lng: 120.9842 };
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID";
 
 // Pans the map whenever the resolved/pinned position changes. Must live inside <Map>.
-const Recenter = ({ position }: { position: google.maps.LatLngLiteral | null }) => {
+const Recenter = ({ position }: { position: { lat: number; lng: number } | null }) => {
   const map = useMap();
   useEffect(() => {
     if (map && position) map.panTo(position);
@@ -82,7 +82,11 @@ const LocationPicker = ({ latitude, longitude, initialAddress, onResolve, onPinC
           defaultCenter={position ?? DEFAULT_CENTER}
           defaultZoom={position ? 16 : 11}
           gestureHandling="greedy"
-          disableDefaultUI={false}
+          mapTypeControl={false}
+          streetViewControl={false}
+          fullscreenControl={false}
+          clickableIcons={false}
+          controlSize={28}
           className="h-full w-full"
         >
           <AdvancedMarker
@@ -93,7 +97,9 @@ const LocationPicker = ({ latitude, longitude, initialAddress, onResolve, onPinC
               const lng = e.latLng?.lng();
               if (lat != null && lng != null) onPinChange(lat, lng);
             }}
-          />
+          >
+            <Pin background="#4f46e5" glyphColor="#ffffff" borderColor="#312e81" scale={1.1} />
+          </AdvancedMarker>
           <Recenter position={position} />
         </Map>
       </div>
