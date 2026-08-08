@@ -35,10 +35,15 @@ class ListingRead(BaseModel):
     longitude: float | None = None
 
     rooms_number: int | None = None
+    bathrooms: int | None = None
+    parking: int | None = None
     floors_number: int | None = None
     floor: int | None = None
     area_total: float | None = None
+    furnished: int | None = None
+    discount: float | None = None
 
+    amenities: list[str] | None = None
     images: list[str] | None = None
 
     created_at: datetime
@@ -65,9 +70,14 @@ class ListingCreate(BaseModel):
     latitude: float | None = None
     longitude: float | None = None
     rooms_number: int | None = None
+    bathrooms: int | None = None
+    parking: int | None = None
     floors_number: int | None = None
     floor: int | None = None
     area_total: float | None = None
+    furnished: int | None = None
+    discount: float | None = None
+    amenities: list[str] | None = None
     images: list[str] | None = None
 
 
@@ -95,7 +105,12 @@ class ListingUpdate(BaseModel):
     latitude: float | None = None
     longitude: float | None = None
     rooms_number: int | None = None
+    bathrooms: int | None = None
+    parking: int | None = None
     floors_number: int | None = None
     floor: int | None = None
     area_total: float | None = None
+    furnished: int | None = None
+    discount: float | None = None
+    amenities: list[str] | None = None
     images: list[str] | None = None

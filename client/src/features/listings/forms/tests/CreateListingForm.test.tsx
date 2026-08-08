@@ -47,8 +47,13 @@ describe("CreateListingForm", () => {
 
     await setInput("title", "Nice flat");
     await setInput("price", "15000");
-    await setInput("roomsNumber", "3");
     await setInput("location.addressLine1", "1 Rizal St");
+
+    // bedrooms is now a stepper (default 0 → click + three times)
+    const incBedrooms = screen.getByRole("button", { name: /increase bedrooms/i });
+    await userEvent.click(incBedrooms);
+    await userEvent.click(incBedrooms);
+    await userEvent.click(incBedrooms);
 
     await userEvent.click(screen.getByRole("button", { name: /submit/i }));
 

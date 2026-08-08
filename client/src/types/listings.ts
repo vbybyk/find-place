@@ -4,6 +4,7 @@ export interface IListing {
   title: string;
   description: string;
   price: number | null;
+  discount: number | null;
   type: number;
   house_type: number;
   country: string | null;
@@ -17,9 +18,13 @@ export interface IListing {
   latitude: number | null;
   longitude: number | null;
   rooms_number: number | null;
+  bathrooms: number | null;
+  parking: number | null;
+  furnished: number | null;
   floors_number: number | null;
   floor: number | null;
   area_total: number | null;
+  amenities: string[] | null;
   images: string[] | null;
   created_at: string;
 }
@@ -31,6 +36,7 @@ export interface IListingPayload {
   type: number;
   house_type: number;
   price?: number | null;
+  discount?: number | null;
   country?: string | null;
   place_id?: string | null;
   city_label?: string | null;
@@ -42,6 +48,11 @@ export interface IListingPayload {
   latitude?: number | null;
   longitude?: number | null;
   rooms_number?: number | null;
+  bathrooms?: number | null;
+  parking?: number | null;
+  furnished?: number | null;
+  area_total?: number | null;
+  amenities?: string[] | null;
   images?: string[] | null;
 }
 
@@ -50,9 +61,15 @@ export interface IListingFormValues {
   title: string;
   description: string;
   price: number;
-  roomsNumber: number;
+  discount: number;
   type: number;
   houseType: number;
+  furnished: number;
+  roomsNumber: number; // bedrooms
+  bathrooms: number;
+  parking: number;
+  areaTotal: number; // floor area m²
+  amenities: string[];
   images: string[];
   location: {
     placeId: string | null;

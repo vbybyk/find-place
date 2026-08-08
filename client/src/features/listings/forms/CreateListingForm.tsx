@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import Select from "@/components/ui/select";
-import FileUploader from "@/features/listings/FileUploader";
-import LocationPicker from "@/features/listings/LocationPicker";
 import Spinner from "@/components/ui/spinner";
+import CategorySection from "./sections/CategorySection";
+import BasicsSection from "./sections/BasicsSection";
+import DetailsSection from "./sections/DetailsSection";
+import PriceSection from "./sections/PriceSection";
+import PhotosSection from "./sections/PhotosSection";
+import LocationSection from "./sections/LocationSection";
 import { createListing, updateListing } from "@/lib/actions/listings";
-import { ListingTypes, PropertyTypes, Countries } from "@/constants/listings";
+import { ListingTypes, PropertyTypes } from "@/constants/listings";
 import { IListing, IListingFormValues, IListingPayload } from "@/types/listings";
-import { IResolvedPlace } from "@/types/places";
 
 interface IProps {
   listing?: IListing;
@@ -30,9 +30,15 @@ const CreateListingForm = (props: IProps) => {
       title: "",
       description: "",
       price: 0,
-      roomsNumber: 0,
+      discount: 0,
       type: 0,
       houseType: 0,
+      furnished: 0,
+      roomsNumber: 0,
+      bathrooms: 0,
+      parking: 0,
+      areaTotal: 0,
+      amenities: [] as string[],
       images: [] as string[],
       location: {
         placeId: null,
@@ -56,9 +62,17 @@ const CreateListingForm = (props: IProps) => {
       setValue("title", l.title);
       setValue("description", l.description);
       setValue("price", l.price || 0);
+      setValue("discount", l.discount || 0);
       setValue("roomsNumber", l.rooms_number || 0);
+      setValue("bathrooms", l.bathrooms || 0);
+      setValue("parking", l.parking || 0);
+      setValue("areaTotal", l.area_total || 0);
+      setValue("furnished", l.furnished || 0);
       setValue("type", ListingTypes.find((t) => t.id === l.type)?.id || 0);
       setValue("houseType", PropertyTypes.find((t) => t.id === l.house_type)?.id || 0);
+      if (l.amenities?.length) {
+        setValue("amenities", l.amenities);
+      }
       if (l.images?.length) {
         setValue("images", l.images);
       }
@@ -78,26 +92,6 @@ const CreateListingForm = (props: IProps) => {
   }, [props.listing]);
 
   const images = watch("images");
-  const latitude = watch("location.latitude");
-  const longitude = watch("location.longitude");
-
-  const handleResolve = (place: IResolvedPlace) => {
-    setValue("location.placeId", place.placeId);
-    if (place.country) setValue("location.country", place.country);
-    setValue("location.city", place.city ?? "");
-    setValue("location.admin1", place.admin1 ?? "");
-    setValue("location.barangay", place.barangay ?? "");
-    setValue("location.postalCode", place.postalCode ?? "");
-    setValue("location.addressLine1", place.addressLine1 ?? "");
-    setValue("location.latitude", place.latitude);
-    setValue("location.longitude", place.longitude);
-  };
-
-  // Dragging the map pin adjusts only the coordinates.
-  const handlePinChange = (lat: number, lng: number) => {
-    setValue("location.latitude", lat);
-    setValue("location.longitude", lng);
-  };
 
   const onSubmit = async (data: IListingFormValues) => {
     const payload: IListingPayload = {
@@ -107,7 +101,13 @@ const CreateListingForm = (props: IProps) => {
       type: Number(data.type),
       house_type: Number(data.houseType),
       price: data.price ? Number(data.price) : null,
-      rooms_number: data.roomsNumber ? Number(data.roomsNumber) : null,
+      discount: data.discount ? Number(data.discount) : null,
+      furnished: data.furnished ? Number(data.furnished) : null,
+      rooms_number: Number(data.roomsNumber) || null,
+      bathrooms: Number(data.bathrooms) || null,
+      parking: Number(data.parking) || null,
+      area_total: data.areaTotal ? Number(data.areaTotal) : null,
+      amenities: data.amenities ?? [],
       country: data.location.country || null,
       place_id: data.location.placeId,
       city_label: data.location.city || null,
@@ -138,43 +138,12 @@ const CreateListingForm = (props: IProps) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-16">
-      <div className="flex flex-col gap-4">
-        <div>
-          <label htmlFor="title">Title</label>
-          <Controller name="title" control={control} render={({ field }) => <Input {...field} />} />
-        </div>
-        <div>
-          <label htmlFor="type">Listing type</label>
-          <Controller
-            name="type"
-            control={control}
-            render={({ field }) => <Select {...field} options={ListingTypes} keyValue="id" />}
-          />
-        </div>
-        <div>
-          <label htmlFor="type">Property type</label>
-          <Controller
-            name="houseType"
-            control={control}
-            render={({ field }) => <Select {...field} options={PropertyTypes} keyValue="id" />}
-          />
-        </div>
-        <div>
-          <label htmlFor="description">Description</label>
-          <Controller name="description" control={control} render={({ field }) => <Textarea {...field} />} />
-        </div>
-        <div>
-          <label htmlFor="price">Price</label>
-          <Controller name="price" control={control} render={({ field }) => <Input {...field} />} />
-        </div>
-        <div>
-          <label htmlFor="roomsNumber">Rooms Number</label>
-          <Controller name="roomsNumber" control={control} render={({ field }) => <Input {...field} />} />
-        </div>
-        <div>
-          <label htmlFor="images">Images</label>
-          <FileUploader images={images} onChange={(files) => setValue("images", files)} />
-        </div>
+      <div className="flex flex-col gap-8">
+        <CategorySection control={control} />
+        <BasicsSection control={control} />
+        <DetailsSection control={control} />
+        <PriceSection control={control} />
+        <PhotosSection images={images} onChange={(files) => setValue("images", files)} />
         <button
           type="submit"
           disabled={isUpdating}
@@ -184,47 +153,12 @@ const CreateListingForm = (props: IProps) => {
           {isUpdating && <Spinner className="w-5 h-5" />}
         </button>
       </div>
-      <div className="flex flex-col gap-4">
-        <LocationPicker
-          latitude={latitude}
-          longitude={longitude}
-          initialAddress={props.listing?.address_line1 ?? ""}
-          onResolve={handleResolve}
-          onPinChange={handlePinChange}
-        />
-        <div>
-          <label htmlFor="country">Country</label>
-          <Controller
-            name="location.country"
-            control={control}
-            render={({ field }) => <Select {...field} options={Countries} keyValue="code" />}
-          />
-        </div>
-        <div>
-          <label htmlFor="city">City / Municipality</label>
-          <Controller name="location.city" control={control} render={({ field }) => <Input {...field} />} />
-        </div>
-        <div>
-          <label htmlFor="admin1">Province</label>
-          <Controller name="location.admin1" control={control} render={({ field }) => <Input {...field} />} />
-        </div>
-        <div>
-          <label htmlFor="barangay">Barangay</label>
-          <Controller name="location.barangay" control={control} render={({ field }) => <Input {...field} />} />
-        </div>
-        <div>
-          <label htmlFor="postalCode">Postal code</label>
-          <Controller name="location.postalCode" control={control} render={({ field }) => <Input {...field} />} />
-        </div>
-        <div>
-          <label htmlFor="addressLine1">Address Line 1</label>
-          <Controller name="location.addressLine1" control={control} render={({ field }) => <Input {...field} />} />
-        </div>
-        <div>
-          <label htmlFor="addressLine2">Address Line 2</label>
-          <Controller name="location.addressLine2" control={control} render={({ field }) => <Input {...field} />} />
-        </div>
-      </div>
+      <LocationSection
+        control={control}
+        setValue={setValue}
+        watch={watch}
+        initialAddress={props.listing?.address_line1 ?? ""}
+      />
     </form>
   );
 };

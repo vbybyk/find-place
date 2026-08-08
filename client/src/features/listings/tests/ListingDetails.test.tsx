@@ -24,7 +24,7 @@ describe("ListingDetails", () => {
     render(<ListingDetails listing={listing} />);
     expect(screen.getByRole("heading", { name: "Sea view condo" })).toBeInTheDocument();
     expect(screen.getByText("25000₱")).toBeInTheDocument();
-    expect(screen.getByText("Rooms: 2")).toBeInTheDocument();
+    expect(screen.getByText("2 bedrooms")).toBeInTheDocument();
     expect(screen.getByText("Bright unit near the bay.")).toBeInTheDocument();
   });
 

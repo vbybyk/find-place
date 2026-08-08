@@ -49,11 +49,16 @@ class Listing(Base):
         nullable=True,
     )
 
-    rooms_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    rooms_number: Mapped[int | None] = mapped_column(Integer, nullable=True)  # bedrooms
+    bathrooms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    parking: Mapped[int | None] = mapped_column(Integer, nullable=True)  # parking spaces
     floors_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
     floor: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    area_total: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    area_total: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)  # floor area m²
+    furnished: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1=Unfurnished,2=Semi,3=Furnished
+    discount: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)  # percent off, 0-100
 
+    amenities: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     images: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(

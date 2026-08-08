@@ -25,7 +25,11 @@ describe("POST /api/listings/upload-image", () => {
 
   it("uploads the file buffer to cloudinary and returns the url", async () => {
     uploadStream.mockImplementation((_opts: unknown, cb: (e: unknown, r: unknown) => void) => {
-      cb(null, { url: "https://res.cloudinary.com/listings/x.jpg" });
+      // Cloudinary returns both; we use the https secure_url.
+      cb(null, {
+        url: "http://res.cloudinary.com/listings/x.jpg",
+        secure_url: "https://res.cloudinary.com/listings/x.jpg",
+      });
       return { write: vi.fn(), end: vi.fn() };
     });
 
