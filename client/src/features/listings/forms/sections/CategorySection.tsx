@@ -3,6 +3,7 @@
 import { Control, Controller } from "react-hook-form";
 import { KeyIcon, BanknotesIcon, BuildingOffice2Icon, HomeModernIcon } from "@heroicons/react/24/outline";
 import OptionCards from "../OptionCards";
+import FieldError from "@/components/ui/field-error";
 import { ListingTypes, PropertyTypes } from "@/constants/listings";
 import { IListingFormValues } from "@/types/listings";
 
@@ -26,8 +27,12 @@ const CategorySection = ({ control }: { control: Control<IListingFormValues> }) 
       <Controller
         name="type"
         control={control}
-        render={({ field }) => (
-          <OptionCards options={listingOptions} value={field.value} onChange={field.onChange} />
+        rules={{ validate: (v) => Number(v) > 0 || "Choose a listing type." }}
+        render={({ field, fieldState }) => (
+          <>
+            <OptionCards options={listingOptions} value={field.value} onChange={field.onChange} />
+            <FieldError message={fieldState.error?.message} />
+          </>
         )}
       />
     </div>
@@ -36,8 +41,12 @@ const CategorySection = ({ control }: { control: Control<IListingFormValues> }) 
       <Controller
         name="houseType"
         control={control}
-        render={({ field }) => (
-          <OptionCards options={propertyOptions} value={field.value} onChange={field.onChange} />
+        rules={{ validate: (v) => Number(v) > 0 || "Choose a property type." }}
+        render={({ field, fieldState }) => (
+          <>
+            <OptionCards options={propertyOptions} value={field.value} onChange={field.onChange} />
+            <FieldError message={fieldState.error?.message} />
+          </>
         )}
       />
     </div>

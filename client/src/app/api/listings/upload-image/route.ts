@@ -11,10 +11,11 @@ const uploadImage = async (file: any, path: string) => {
     secure: true,
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream({ public_id: `${path}/${Date.now()}` }, (error, result) => {
       if (error) reject(error);
-      else resolve(result?.secure_url);
+      // secure_url is the https:// URL — next/image's remotePattern requires https.
+      else resolve(result?.secure_url ?? "");
     });
 
     stream.write(file);

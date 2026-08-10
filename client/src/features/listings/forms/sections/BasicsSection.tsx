@@ -5,6 +5,7 @@ import { Control, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import Stepper from "@/components/ui/stepper";
 import OptionCards from "../OptionCards";
+import FieldError from "@/components/ui/field-error";
 import { FurnishedTypes } from "@/constants/listings";
 import { IListingFormValues } from "@/types/listings";
 
@@ -53,7 +54,17 @@ const BasicsSection = ({ control }: { control: Control<IListingFormValues> }) =>
       <label htmlFor="areaTotal" className="mb-1 block">
         Floor area (m²)
       </label>
-      <Controller name="areaTotal" control={control} render={({ field }) => <Input {...field} />} />
+      <Controller
+        name="areaTotal"
+        control={control}
+        rules={{ validate: (v) => !v || Number(v) >= 0 || "Enter a valid floor area." }}
+        render={({ field, fieldState }) => (
+          <>
+            <Input {...field} error={!!fieldState.error} />
+            <FieldError message={fieldState.error?.message} />
+          </>
+        )}
+      />
     </div>
 
     <div>

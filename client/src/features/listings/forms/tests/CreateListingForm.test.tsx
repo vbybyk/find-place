@@ -41,12 +41,28 @@ describe("CreateListingForm", () => {
     expect(screen.getByRole("button", { name: /submit/i })).toBeInTheDocument();
   });
 
+  it("shows a per-field error for each invalid field on submit and does not call the API", async () => {
+    render(<CreateListingForm />);
+    await userEvent.click(screen.getByRole("button", { name: /submit/i }));
+
+    await waitFor(() => expect(screen.getByText("Add a title.")).toBeInTheDocument());
+    expect(screen.getByText("Choose a listing type.")).toBeInTheDocument();
+    expect(screen.getByText("Choose a property type.")).toBeInTheDocument();
+    expect(screen.getByText("Add a base price.")).toBeInTheDocument();
+    expect(screen.getByText("Add a city or municipality.")).toBeInTheDocument();
+    expect(createListing).not.toHaveBeenCalled();
+  });
+
   it("submits a created listing as a flat snake_case payload, then redirects", async () => {
     createListing.mockResolvedValue({});
     render(<CreateListingForm />);
 
+    // required fields: listing type, property type and city are now validated
+    await userEvent.click(screen.getByRole("button", { name: "Rent" }));
+    await userEvent.click(screen.getByRole("button", { name: "Apartment" }));
     await setInput("title", "Nice flat");
     await setInput("price", "15000");
+    await setInput("location.city", "Manila");
     await setInput("location.addressLine1", "1 Rizal St");
 
     // bedrooms is now a stepper (default 0 → click + three times)

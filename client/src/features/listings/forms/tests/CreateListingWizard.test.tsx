@@ -33,14 +33,25 @@ describe("CreateListingWizard", () => {
     expect(screen.getByRole("button", { name: /next/i })).toBeInTheDocument();
   });
 
-  it("blocks Next until the step is valid", async () => {
+  it("keeps Next disabled until the step's required fields are provided", async () => {
     render(<CreateListingWizard />);
-    await userEvent.click(screen.getByRole("button", { name: /next/i }));
-    // validation message shown, still on step 1
-    await waitFor(() =>
-      expect(screen.getByText(/choose a listing type and a property type/i)).toBeInTheDocument()
-    );
-    expect(screen.getByText("Step 1 of 7")).toBeInTheDocument();
+    const next = screen.getByRole("button", { name: /next/i });
+    expect(next).toBeDisabled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Rent" }));
+    expect(next).toBeDisabled(); // property type still missing
+
+    await userEvent.click(screen.getByRole("button", { name: "Apartment" }));
+    await waitFor(() => expect(next).toBeEnabled());
     expect(createListing).not.toHaveBeenCalled();
+  });
+
+  it("advances to the next step once the current step is valid", async () => {
+    render(<CreateListingWizard />);
+    await userEvent.click(screen.getByRole("button", { name: "Rent" }));
+    await userEvent.click(screen.getByRole("button", { name: "Apartment" }));
+
+    await userEvent.click(screen.getByRole("button", { name: /next/i }));
+    await waitFor(() => expect(screen.getByText("Step 2 of 7")).toBeInTheDocument());
   });
 });

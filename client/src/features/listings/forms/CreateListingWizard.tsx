@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, FieldPath } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Spinner from "@/components/ui/spinner";
 import CategorySection from "./sections/CategorySection";
@@ -33,78 +33,104 @@ const ReviewRow = ({ label, value }: { label: string; value: React.ReactNode }) 
 const CreateListingWizard = () => {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [error, setError] = useState("");
+  const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { control, handleSubmit, setValue, watch, getValues } = useForm<IListingFormValues>({
-    mode: "all",
-    defaultValues: {
-      userId: 0,
-      title: "",
-      description: "",
-      price: 0,
-      discount: 0,
-      type: 0,
-      houseType: 0,
-      furnished: 0,
-      roomsNumber: 1,
-      bathrooms: 1,
-      parking: 0,
-      areaTotal: 0,
-      amenities: [] as string[],
-      images: [] as string[],
-      location: {
-        placeId: null,
-        country: "PH",
-        city: "",
-        admin1: "",
-        barangay: "",
-        postalCode: "",
-        addressLine1: "",
-        addressLine2: "",
-        latitude: null,
-        longitude: null,
+  const { control, handleSubmit, setValue, watch, getValues, trigger, setError, clearErrors } =
+    useForm<IListingFormValues>({
+      mode: "all",
+      defaultValues: {
+        userId: 0,
+        title: "",
+        description: "",
+        price: 0,
+        discount: 0,
+        type: 0,
+        houseType: 0,
+        furnished: 0,
+        roomsNumber: 1,
+        bathrooms: 1,
+        parking: 0,
+        areaTotal: 0,
+        amenities: [] as string[],
+        images: [] as string[],
+        location: {
+          placeId: null,
+          country: "PH",
+          city: "",
+          admin1: "",
+          barangay: "",
+          postalCode: "",
+          addressLine1: "",
+          addressLine2: "",
+          latitude: null,
+          longitude: null,
+        },
       },
-    },
-  });
+    });
 
   const images = watch("images");
+  const latitude = watch("location.latitude");
+  const longitude = watch("location.longitude");
+  useEffect(() => {
+    if (latitude != null && longitude != null) clearErrors("location.latitude");
+  }, [latitude, longitude, clearErrors]);
 
-  // Per-step required checks (block "Next" until satisfied).
-  const validateStep = (): string | null => {
-    const v = getValues();
+  const STEP_FIELDS: Record<number, FieldPath<IListingFormValues>[]> = {
+    0: ["type", "houseType"],
+    1: ["location.city"],
+    3: ["title"],
+    5: ["price", "discount"],
+  };
+
+  // Reactive per-step validity — gates the "Next" button. Reads the watched
+  // values so the button enables/disables live as the step is completed.
+  const type = watch("type");
+  const houseType = watch("houseType");
+  const city = watch("location.city");
+  const title = watch("title");
+  const price = watch("price");
+  const discount = watch("discount");
+
+  const isStepValid = (): boolean => {
     switch (step) {
       case 0:
-        if (!Number(v.type) || !Number(v.houseType)) return "Choose a listing type and a property type.";
-        return null;
+        return Number(type) > 0 && Number(houseType) > 0;
       case 1:
-        if (v.location.latitude == null || v.location.longitude == null)
-          return "Search an address and drop the pin on the map.";
-        if (!v.location.city.trim()) return "Add a city or municipality.";
-        return null;
+        return latitude != null && longitude != null && !!String(city ?? "").trim();
       case 3:
-        if (!v.title.trim()) return "Add a title.";
-        return null;
-      case 5:
-        if (!Number(v.price)) return "Add a base price.";
-        return null;
+        return !!String(title ?? "").trim();
+      case 5: {
+        const d = Number(discount);
+        return Number(price) > 0 && Number.isFinite(d) && d >= 0 && d <= 100;
+      }
       default:
-        return null;
+        return true;
     }
   };
 
-  const goNext = () => {
-    const err = validateStep();
-    if (err) {
-      setError(err);
-      return;
+  const goNext = async () => {
+    setSubmitError("");
+    const fields = STEP_FIELDS[step] ?? [];
+    let valid = fields.length ? await trigger(fields) : true;
+
+    // The map pin has no rendered input — guard it explicitly on the location step.
+    if (step === 1) {
+      const { latitude, longitude } = getValues("location");
+      if (latitude == null || longitude == null) {
+        setError("location.latitude", { type: "manual", message: "Search an address and drop the pin on the map." });
+        valid = false;
+      } else {
+        clearErrors("location.latitude");
+      }
     }
-    setError("");
+
+    if (!valid) return;
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   };
 
   const goBack = () => {
-    setError("");
+    setSubmitError("");
     setStep((s) => Math.max(s - 1, 0));
   };
 
@@ -141,7 +167,7 @@ const CreateListingWizard = () => {
       router.push("/listings");
     } catch (e) {
       console.error("Error while creating listing", e);
-      setError("Something went wrong. Please try again.");
+      setSubmitError("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -214,7 +240,10 @@ const CreateListingWizard = () => {
             <>
               <StepHeading title="Review your listing" hint="Check everything, then publish." />
               <dl className="divide-y divide-gray-100 text-sm">
-                <ReviewRow label="Listing type" value={ListingTypes.find((t) => t.id === Number(watch("type")))?.name} />
+                <ReviewRow
+                  label="Listing type"
+                  value={ListingTypes.find((t) => t.id === Number(watch("type")))?.name}
+                />
                 <ReviewRow
                   label="Property type"
                   value={PropertyTypes.find((t) => t.id === Number(watch("houseType")))?.name}
@@ -233,9 +262,7 @@ const CreateListingWizard = () => {
                 <ReviewRow
                   label="Price"
                   value={
-                    watch("price")
-                      ? `${watch("price")}₱${watch("discount") ? ` (−${watch("discount")}%)` : ""}`
-                      : ""
+                    watch("price") ? `${watch("price")}₱${watch("discount") ? ` (−${watch("discount")}%)` : ""}` : ""
                   }
                 />
                 <ReviewRow label="Photos" value={`${images?.length ?? 0} added`} />
@@ -250,7 +277,7 @@ const CreateListingWizard = () => {
           )}
         </div>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {submitError && <p className="mt-4 text-sm text-red-600">{submitError}</p>}
 
         <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-6">
           <button
@@ -274,7 +301,8 @@ const CreateListingWizard = () => {
             <button
               type="button"
               onClick={goNext}
-              className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-indigo-700"
+              disabled={!isStepValid()}
+              className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-indigo-600"
             >
               Next
             </button>

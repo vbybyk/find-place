@@ -4,6 +4,7 @@ import { Control, Controller } from "react-hook-form";
 import clsx from "clsx";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import FieldError from "@/components/ui/field-error";
 import { Amenities } from "@/constants/listings";
 import { IListingFormValues } from "@/types/listings";
 
@@ -11,7 +12,17 @@ const DetailsSection = ({ control }: { control: Control<IListingFormValues> }) =
   <div className="flex flex-col gap-4">
     <div>
       <label htmlFor="title">Title</label>
-      <Controller name="title" control={control} render={({ field }) => <Input {...field} />} />
+      <Controller
+        name="title"
+        control={control}
+        rules={{ required: "Add a title." }}
+        render={({ field, fieldState }) => (
+          <>
+            <Input {...field} error={!!fieldState.error} />
+            <FieldError message={fieldState.error?.message} />
+          </>
+        )}
+      />
     </div>
     <div>
       <label htmlFor="description">Description</label>

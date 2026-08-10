@@ -2,6 +2,7 @@
 
 import { Control, Controller, UseFormSetValue, UseFormWatch } from "react-hook-form";
 import { Input } from "@/components/ui/input";
+import FieldError from "@/components/ui/field-error";
 import LocationPicker from "@/features/listings/LocationPicker";
 import { IListingFormValues } from "@/types/listings";
 import { IResolvedPlace } from "@/types/places";
@@ -43,9 +44,25 @@ const LocationSection = ({ control, setValue, watch, initialAddress }: IProps) =
         onResolve={handleResolve}
         onPinChange={handlePinChange}
       />
+      {/* No rendered input — surfaces the pin error set by the wizard's step guard. */}
+      <Controller
+        name="location.latitude"
+        control={control}
+        render={({ fieldState }) => <FieldError message={fieldState.error?.message} />}
+      />
       <div>
         <label htmlFor="city">City / Municipality</label>
-        <Controller name="location.city" control={control} render={({ field }) => <Input {...field} />} />
+        <Controller
+          name="location.city"
+          control={control}
+          rules={{ required: "Add a city or municipality." }}
+          render={({ field, fieldState }) => (
+            <>
+              <Input {...field} error={!!fieldState.error} />
+              <FieldError message={fieldState.error?.message} />
+            </>
+          )}
+        />
       </div>
       <div>
         <label htmlFor="admin1">Province</label>
