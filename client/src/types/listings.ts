@@ -70,7 +70,7 @@ export interface IListingFormValues {
   parking: number;
   areaTotal: number; // floor area m²
   amenities: string[];
-  images: string[];
+  images: IListingFormImage[];
   location: {
     placeId: string | null;
     country: string;
@@ -84,3 +84,11 @@ export interface IListingFormValues {
     longitude: number | null;
   };
 }
+
+/** Form-only image entry. API payloads still use `string[]` of Cloudinary URLs. */
+export type IListingFormImage =
+  | { id: string; kind: "remote"; url: string }
+  | { id: string; kind: "local"; previewUrl: string; file: File };
+
+export const remoteImagesToForm = (urls: string[] | null | undefined): IListingFormImage[] =>
+  (urls ?? []).map((url) => ({ id: url, kind: "remote" as const, url }));

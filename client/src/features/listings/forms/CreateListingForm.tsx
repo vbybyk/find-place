@@ -12,7 +12,8 @@ import PhotosSection from "./sections/PhotosSection";
 import LocationSection from "./sections/LocationSection";
 import { createListing, updateListing } from "@/lib/actions/listings";
 import { ListingTypes, PropertyTypes } from "@/constants/listings";
-import { IListing, IListingFormValues, IListingPayload } from "@/types/listings";
+import { IListing, IListingFormValues, IListingPayload, remoteImagesToForm } from "@/types/listings";
+import { resolveListingImageUrls } from "@/utils/listings";
 
 interface IProps {
   listing?: IListing;
@@ -39,7 +40,7 @@ const CreateListingForm = (props: IProps) => {
       parking: 0,
       areaTotal: 0,
       amenities: [] as string[],
-      images: [] as string[],
+      images: [],
       location: {
         placeId: null,
         country: "PH",
@@ -74,7 +75,7 @@ const CreateListingForm = (props: IProps) => {
         setValue("amenities", l.amenities);
       }
       if (l.images?.length) {
-        setValue("images", l.images);
+        setValue("images", remoteImagesToForm(l.images));
       }
       setValue("location", {
         placeId: l.place_id ?? null,
@@ -94,34 +95,35 @@ const CreateListingForm = (props: IProps) => {
   const images = watch("images");
 
   const onSubmit = async (data: IListingFormValues) => {
-    const payload: IListingPayload = {
-      user_id: 1,
-      title: data.title,
-      description: data.description,
-      type: Number(data.type),
-      house_type: Number(data.houseType),
-      price: data.price ? Number(data.price) : null,
-      discount: data.discount ? Number(data.discount) : null,
-      furnished: data.furnished ? Number(data.furnished) : null,
-      rooms_number: Number(data.roomsNumber) || null,
-      bathrooms: Number(data.bathrooms) || null,
-      parking: Number(data.parking) || null,
-      area_total: data.areaTotal ? Number(data.areaTotal) : null,
-      amenities: data.amenities ?? [],
-      country: data.location.country || null,
-      place_id: data.location.placeId,
-      city_label: data.location.city || null,
-      admin_name1: data.location.admin1 || null,
-      barangay: data.location.barangay || null,
-      postal_code: data.location.postalCode || null,
-      address_line1: data.location.addressLine1 || null,
-      address_line2: data.location.addressLine2 || null,
-      latitude: data.location.latitude,
-      longitude: data.location.longitude,
-      images: data.images ?? [],
-    };
     try {
       setIsUpdating(true);
+      const imageUrls = await resolveListingImageUrls(data.images ?? []);
+      const payload: IListingPayload = {
+        user_id: 1,
+        title: data.title,
+        description: data.description,
+        type: Number(data.type),
+        house_type: Number(data.houseType),
+        price: data.price ? Number(data.price) : null,
+        discount: data.discount ? Number(data.discount) : null,
+        furnished: data.furnished ? Number(data.furnished) : null,
+        rooms_number: Number(data.roomsNumber) || null,
+        bathrooms: Number(data.bathrooms) || null,
+        parking: Number(data.parking) || null,
+        area_total: data.areaTotal ? Number(data.areaTotal) : null,
+        amenities: data.amenities ?? [],
+        country: data.location.country || null,
+        place_id: data.location.placeId,
+        city_label: data.location.city || null,
+        admin_name1: data.location.admin1 || null,
+        barangay: data.location.barangay || null,
+        postal_code: data.location.postalCode || null,
+        address_line1: data.location.addressLine1 || null,
+        address_line2: data.location.addressLine2 || null,
+        latitude: data.location.latitude,
+        longitude: data.location.longitude,
+        images: imageUrls,
+      };
       if (props?.type === "edit" && props.listing) {
         const listingId = props.listing.id;
         await updateListing(listingId, payload, `/listings/${listingId}`);
@@ -147,7 +149,7 @@ const CreateListingForm = (props: IProps) => {
         <button
           type="submit"
           disabled={isUpdating}
-          className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base w-60 h-10 sm:h-12 px-4 sm:px-5"
+          className="ui-button h-10 w-60 sm:h-12 sm:text-base"
         >
           {props?.type === "edit" ? "Update" : "Submit"}
           {isUpdating && <Spinner className="w-5 h-5" />}

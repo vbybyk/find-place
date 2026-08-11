@@ -13,6 +13,12 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+    proxyClientMaxBodySize: "10mb",
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

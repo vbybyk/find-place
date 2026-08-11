@@ -24,7 +24,7 @@ const Select = forwardRef<HTMLButtonElement, ISelectProps>((props, ref) => {
     <BaseUISelect.Root value={value} onValueChange={(newValue) => onChange?.(newValue)} items={items}>
       <BaseUISelect.Trigger
         ref={ref}
-        className="flex items-center justify-between text-sm font-sans box-border w-80 h-10 px-3 py-2 rounded-lg text-left bg-white dark:bg-neutral-900 border border-solid border-slate-200 dark:border-neutral-700 text-slate-900 dark:text-neutral-300 transition-all hover:bg-slate-50 dark:hover:bg-neutral-800 outline-0 shadow-md shadow-slate-100 dark:shadow-slate-900 focus-visible:ring-4 focus-visible:ring-purple-500/30 focus-visible:border-purple-500 focus-visible:dark:border-purple-500"
+        className="ui-input box-border flex h-10 w-80 items-center justify-between text-left font-sans text-slate-900 dark:text-neutral-300"
       >
         {value ? <BaseUISelect.Value /> : <span className="text-slate-900 dark:text-slate-300">{placeholder}</span>}
         <BaseUISelect.Icon className="flex">

@@ -27,7 +27,7 @@ const OptionCards = ({ options, value, onChange, columns = 2 }: IProps) => (
           aria-pressed={selected}
           onClick={() => onChange(opt.value)}
           className={clsx(
-            "flex flex-col items-start gap-3 rounded-xl border p-4 text-left transition",
+            "flex flex-col items-start gap-3 rounded-xl border p-4 text-left transition shadow-[0_2px_4px_rgb(0_0_0_/_0.05)] dark:shadow-[0_2px_4px_rgb(0_0_0_/_0.5)]",
             selected ? "border-gray-900 ring-1 ring-gray-900" : "border-gray-200 hover:border-gray-400"
           )}
         >

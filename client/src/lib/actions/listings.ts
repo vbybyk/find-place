@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { IListing, IListingPayload } from "@/types/listings";
+import { uploadBufferToCloudinary } from "@/lib/cloudinary";
 
 // FastAPI backend (business logic + data).
 const API_URL = process.env.API_URL;
-// Next.js own origin — used for the Cloudinary image-upload proxy route handler.
-const BACKEND_URL = process.env.BACKEND_URL;
+
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // keep in sync with FileUploader client check
+const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/jpg"]);
 
 interface IListingsQuery {
   type?: string;
@@ -76,27 +78,23 @@ export const updateListing = async (id: number, listing: Partial<IListingPayload
   }
 };
 
-export const uploadImage = async (formData: FormData) => {
+export const uploadImage = async (formData: FormData): Promise<string | undefined> => {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/listings/upload-image`, {
-      method: "POST",
-      body: formData,
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    if (response.ok) {
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-        return data;
-      } else {
-        const text = await response.text();
-        return text;
-      }
+    const file = formData.get("file");
+    if (!(file instanceof Blob) || file.size === 0) {
+      throw new Error("File not found");
     }
+    if (file.size > MAX_IMAGE_BYTES) {
+      throw new Error("Each photo must be 10 MB or smaller");
+    }
+    if (file.type && !ACCEPTED_IMAGE_TYPES.has(file.type)) {
+      throw new Error("Only jpg and png files are allowed");
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    return await uploadBufferToCloudinary(buffer, "listings");
   } catch (error) {
     console.error("Error while uploading image", error);
+    throw error;
   }
 };

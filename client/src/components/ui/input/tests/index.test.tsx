@@ -16,7 +16,7 @@ describe("Input", () => {
     render(<Input className="custom-x" placeholder="p" />);
     const input = screen.getByPlaceholderText("p");
     expect(input).toHaveClass("custom-x");
-    expect(input.className).toContain("rounded-lg");
+    expect(input.className).toContain("ui-input");
   });
 
   it("forwards a ref to the underlying input", () => {

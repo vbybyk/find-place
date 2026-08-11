@@ -53,9 +53,7 @@ const Autocomplete = forwardRef<HTMLDivElement, IAutocompleteProps>((props, _ref
           disabled={disabled || readOnly}
           readOnly={readOnly}
           className={clsx(
-            "overflow-hidden text-sm leading-[1.5] text-gray-900 dark:text-gray-300 bg-white px-3 py-2 outline-0 border border-solid border-gray-200",
-            "focus-within:border-violet-400 dark:focus-within:border-violet-400 focus-within:shadow-[0_0_0_1px_transparent] focus-within:shadow-violet-200 dark:focus-within:shadow-violet-500 focus-within:outline-0",
-            "dark:bg-gray-800, dark:border-gray-700",
+            "ui-input overflow-hidden leading-[1.5] text-gray-900 dark:text-gray-300",
             className
           )}
           placeholder="Type to search..."

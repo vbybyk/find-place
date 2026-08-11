@@ -1,8 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // revalidatePath is a Next server-only helper; stub it so the actions run in jsdom.
-const { revalidatePath } = vi.hoisted(() => ({ revalidatePath: vi.fn() }));
+const { revalidatePath, uploadBufferToCloudinary } = vi.hoisted(() => ({
+  revalidatePath: vi.fn(),
+  uploadBufferToCloudinary: vi.fn(),
+}));
 vi.mock("next/cache", () => ({ revalidatePath: (p: string) => revalidatePath(p) }));
+vi.mock("@/lib/cloudinary", () => ({
+  uploadBufferToCloudinary: (...args: unknown[]) => uploadBufferToCloudinary(...args),
+}));
 
 import {
   getListings,
@@ -94,30 +100,31 @@ describe("updateListing", () => {
 });
 
 describe("uploadImage", () => {
-  it("returns parsed json when the response is json", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        headers: { get: () => "application/json" },
-        json: async () => ({ url: "https://cdn/x.jpg" }),
-      })
-    );
+  it("uploads the file buffer to cloudinary and returns the secure url", async () => {
+    uploadBufferToCloudinary.mockResolvedValue("https://res.cloudinary.com/listings/x.jpg");
+
+    const file = new File(["binary"], "photo.jpg", { type: "image/jpeg" });
+    // jsdom's File/Blob lacks arrayBuffer(); patch like the old route test.
+    file.arrayBuffer = async () => new Uint8Array([1, 2, 3]).buffer;
 
     const fd = new FormData();
-    expect(await uploadImage(fd)).toEqual({ url: "https://cdn/x.jpg" });
+    fd.append("file", file);
+
+    expect(await uploadImage(fd)).toBe("https://res.cloudinary.com/listings/x.jpg");
+    expect(uploadBufferToCloudinary).toHaveBeenCalledWith(expect.any(Buffer), "listings");
   });
 
-  it("falls back to text when the response is not json", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        headers: { get: () => "text/plain" },
-        text: async () => "https://cdn/x.jpg",
-      })
-    );
+  it("rejects when no file is present", async () => {
+    await expect(uploadImage(new FormData())).rejects.toThrow("File not found");
+    expect(uploadBufferToCloudinary).not.toHaveBeenCalled();
+  });
 
-    expect(await uploadImage(new FormData())).toBe("https://cdn/x.jpg");
+  it("rejects files larger than 10 MB", async () => {
+    const fd = new FormData();
+    const big = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "huge.jpg", { type: "image/jpeg" });
+    fd.append("file", big);
+
+    await expect(uploadImage(fd)).rejects.toThrow("Each photo must be 10 MB or smaller");
+    expect(uploadBufferToCloudinary).not.toHaveBeenCalled();
   });
 });
