@@ -1,6 +1,6 @@
 import { getListingById } from "@/lib/actions/listings";
 import { notFound } from "next/navigation";
-import CreateListingForm from "@/features/listings/forms/CreateListingForm";
+import EditListingForm from "@/features/listings/forms/EditListingForm";
 import ListingDetails from "@/features/listings/ListingDetails";
 
 const Listing = async ({
@@ -20,8 +20,14 @@ const Listing = async ({
 
   return (
     <div className="py-8">
-      {userId && <h1 className="text-lg font-semibold">{listing.title}</h1>}
-      {userId ? <CreateListingForm listing={listing} type="edit" /> : <ListingDetails listing={listing} />}
+      {userId ? (
+        <div className="mx-auto max-w-2xl">
+          <h1 className="mb-6 text-lg font-semibold">{listing.title}</h1>
+          <EditListingForm listing={listing} />
+        </div>
+      ) : (
+        <ListingDetails listing={listing} />
+      )}
     </div>
   );
 };

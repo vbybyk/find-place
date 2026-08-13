@@ -12,8 +12,8 @@ import PhotosSection from "./sections/PhotosSection";
 import PriceSection from "./sections/PriceSection";
 import ReviewSection from "./sections/ReviewSection";
 import { createListing } from "@/lib/actions/listings";
-import { IListingFormValues, IListingPayload } from "@/types/listings";
-import { resolveListingImageUrls } from "@/utils/listings";
+import { IListingFormValues } from "@/types/listings";
+import { emptyListingFormValues, formValuesToPayload, resolveListingImageUrls } from "@/utils/listings";
 
 const STEPS = ["Type", "Location", "Basics", "Details", "Photos", "Price", "Review"] as const;
 
@@ -34,32 +34,9 @@ const CreateListingWizard = () => {
     useForm<IListingFormValues>({
       mode: "all",
       defaultValues: {
-        userId: 0,
-        title: "",
-        description: "",
-        price: 0,
-        discount: 0,
-        type: 0,
-        houseType: 0,
-        furnished: 0,
+        ...emptyListingFormValues(),
         roomsNumber: 1,
         bathrooms: 1,
-        parking: 0,
-        areaTotal: 0,
-        amenities: [] as string[],
-        images: [],
-        location: {
-          placeId: null,
-          country: "PH",
-          city: "",
-          admin1: "",
-          barangay: "",
-          postalCode: "",
-          addressLine1: "",
-          addressLine2: "",
-          latitude: null,
-          longitude: null,
-        },
       },
     });
 
@@ -133,33 +110,7 @@ const CreateListingWizard = () => {
       setIsSubmitting(true);
       setSubmitError("");
       const imageUrls = await resolveListingImageUrls(data.images ?? []);
-      const payload: IListingPayload = {
-        user_id: 1,
-        title: data.title,
-        description: data.description,
-        type: Number(data.type),
-        house_type: Number(data.houseType),
-        price: data.price ? Number(data.price) : null,
-        discount: data.discount ? Number(data.discount) : null,
-        furnished: data.furnished ? Number(data.furnished) : null,
-        rooms_number: Number(data.roomsNumber) || null,
-        bathrooms: Number(data.bathrooms) || null,
-        parking: Number(data.parking) || null,
-        area_total: data.areaTotal ? Number(data.areaTotal) : null,
-        amenities: data.amenities ?? [],
-        country: data.location.country || null,
-        place_id: data.location.placeId,
-        city_label: data.location.city || null,
-        admin_name1: data.location.admin1 || null,
-        barangay: data.location.barangay || null,
-        postal_code: data.location.postalCode || null,
-        address_line1: data.location.addressLine1 || null,
-        address_line2: data.location.addressLine2 || null,
-        latitude: data.location.latitude,
-        longitude: data.location.longitude,
-        images: imageUrls,
-      };
-      await createListing(payload, "/listings");
+      await createListing(formValuesToPayload(data, imageUrls), "/listings");
       router.push("/listings");
     } catch (e) {
       console.error("Error while creating listing", e);
