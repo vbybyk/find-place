@@ -5,10 +5,12 @@ import Autocomplete from "@/components/ui/autocomplete";
 import { usePlaceAutocomplete } from "@/hooks/places";
 import { IPlaceSuggestion } from "@/types/places";
 
+const CITY_PRIMARY_TYPES = ["locality", "administrative_area_level_2"];
+
 export default function Home() {
   const router = useRouter();
   const { suggestions, loading, search } = usePlaceAutocomplete({
-    includedPrimaryTypes: ["locality", "administrative_area_level_2"],
+    includedPrimaryTypes: CITY_PRIMARY_TYPES,
   });
   const [input, setInput] = useState("");
   const [selected, setSelected] = useState<IPlaceSuggestion | null>(null);

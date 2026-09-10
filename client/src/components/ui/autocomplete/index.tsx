@@ -79,7 +79,7 @@ const Autocomplete = forwardRef<HTMLDivElement, IAutocompleteProps>((props, _ref
       </div>
       <BaseUIAutocomplete.Portal>
         <BaseUIAutocomplete.Positioner sideOffset={-8}>
-          <BaseUIAutocomplete.Popup className="text-sm box-border p-1.5 my-3 mx-0 w-[400px] rounded-xl overflow-auto outline-0 max-h-[300px] z-[1] bg-white dark:bg-gray-800 border border-solid border-gray-200 dark:border-gray-900 text-gray-900 dark:text-gray-200 shadow-[0_4px_30px_transparent] shadow-gray-200 dark:shadow-gray-900">
+          <BaseUIAutocomplete.Popup className="text-sm box-border p-1.5 my-3 mx-0 w-[var(--anchor-width)] rounded-xl overflow-auto outline-0 max-h-[300px] z-[1] bg-white dark:bg-gray-800 border border-solid border-gray-200 dark:border-gray-900 text-gray-900 dark:text-gray-200 shadow-[0_4px_30px_transparent] shadow-gray-200 dark:shadow-gray-900">
             {!options?.length && (
               <BaseUIAutocomplete.Empty className="list-none p-2 cursor-default">No results</BaseUIAutocomplete.Empty>
             )}
