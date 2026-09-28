@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health, listings
+from app.api.routes import ai_search, health, listings
 from app.config import settings
 
 app = FastAPI(title=settings.app_name)
@@ -18,3 +18,4 @@ app.add_middleware(
 # (auth, listings, search, stats, geo...).
 app.include_router(health.router)
 app.include_router(listings.router)
+app.include_router(ai_search.router)

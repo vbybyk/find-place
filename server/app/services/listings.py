@@ -13,6 +13,16 @@ async def list_listings(
     house_type: int | None = None,
     user_id: int | None = None,
     city: str | None = None,
+    min_price: float | None = None,
+    max_price: float | None = None,
+    min_rooms: int | None = None,
+    min_bathrooms: int | None = None,
+    min_parking: int | None = None,
+    furnished: int | None = None,
+    amenities: list[str] | None = None,
+    lat: float | None = None,
+    lng: float | None = None,
+    radius_km: float | None = None,
 ) -> list[ListingRead]:
     """Fetch listings (with filters) and map ORM rows to the API shape."""
     rows = await listings_repo.get_listings(
@@ -23,6 +33,16 @@ async def list_listings(
         house_type=house_type,
         user_id=user_id,
         city=city,
+        min_price=min_price,
+        max_price=max_price,
+        min_rooms=min_rooms,
+        min_bathrooms=min_bathrooms,
+        min_parking=min_parking,
+        furnished=furnished,
+        amenities=amenities,
+        lat=lat,
+        lng=lng,
+        radius_km=radius_km,
     )
     return [ListingRead.model_validate(row) for row in rows]
 

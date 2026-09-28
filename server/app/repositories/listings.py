@@ -1,8 +1,9 @@
 from collections.abc import Sequence
 
+from geoalchemy2 import Geography
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.listing import Listing
@@ -25,6 +26,16 @@ async def get_listings(
     house_type: int | None = None,
     user_id: int | None = None,
     city: str | None = None,
+    min_price: float | None = None,
+    max_price: float | None = None,
+    min_rooms: int | None = None,
+    min_bathrooms: int | None = None,
+    min_parking: int | None = None,
+    furnished: int | None = None,
+    amenities: list[str] | None = None,
+    lat: float | None = None,
+    lng: float | None = None,
+    radius_km: float | None = None,
 ) -> Sequence[Listing]:
     """Newest listings first, paginated, with optional filters."""
     stmt = select(Listing)
@@ -36,6 +47,32 @@ async def get_listings(
         stmt = stmt.where(Listing.user_id == user_id)
     if city is not None:
         stmt = stmt.where(Listing.city_label.ilike(f"%{city}%"))
+    if min_price is not None:
+        stmt = stmt.where(Listing.price >= min_price)
+    if max_price is not None:
+        stmt = stmt.where(Listing.price <= max_price)
+    if min_rooms is not None:
+        stmt = stmt.where(Listing.rooms_number >= min_rooms)
+    if min_bathrooms is not None:
+        stmt = stmt.where(Listing.bathrooms >= min_bathrooms)
+    if min_parking is not None:
+        stmt = stmt.where(Listing.parking >= min_parking)
+    if furnished is not None:
+        stmt = stmt.where(Listing.furnished == furnished)
+    if amenities is not None:
+        # `&&` (array overlap) — true if the listing has ANY of the requested amenities.
+        stmt = stmt.where(Listing.amenities.overlap(amenities))
+    if lat is not None and lng is not None and radius_km is not None:
+        # Cast both points to `geography` so ST_DWithin's distance argument is
+        # real meters on a sphere, instead of raw lat/lng-degree math.
+        origin = func.ST_SetSRID(func.ST_MakePoint(lng, lat), 4326)
+        stmt = stmt.where(
+            func.ST_DWithin(
+                func.cast(Listing.geom, Geography),
+                func.cast(origin, Geography),
+                radius_km * 1000,
+            )
+        )
 
     stmt = stmt.order_by(Listing.id.desc()).limit(limit).offset(offset)
     result = await session.execute(stmt)

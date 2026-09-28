@@ -17,6 +17,16 @@ async def list_listings(
     house_type: int | None = Query(None, description="1=Apartment, 2=House"),
     user_id: int | None = Query(None, description="Only this owner's listings"),
     city: str | None = Query(None, description="Case-insensitive city match"),
+    min_price: float | None = Query(None, ge=0),
+    max_price: float | None = Query(None, ge=0),
+    min_rooms: int | None = Query(None, ge=0, description="Minimum bedrooms"),
+    min_bathrooms: int | None = Query(None, ge=0),
+    min_parking: int | None = Query(None, ge=0),
+    furnished: int | None = Query(None, description="1=Unfurnished, 2=Semi, 3=Furnished"),
+    amenities: list[str] | None = Query(None, description="Match any of these amenity keys"),
+    lat: float | None = Query(None, description="Search origin latitude (needs lng + radius_km)"),
+    lng: float | None = Query(None, description="Search origin longitude (needs lat + radius_km)"),
+    radius_km: float | None = Query(None, gt=0, description="Radius around lat/lng, in km"),
 ) -> list[ListingRead]:
     return await listings_service.list_listings(
         session,
@@ -26,6 +36,16 @@ async def list_listings(
         house_type=house_type,
         user_id=user_id,
         city=city,
+        min_price=min_price,
+        max_price=max_price,
+        min_rooms=min_rooms,
+        min_bathrooms=min_bathrooms,
+        min_parking=min_parking,
+        furnished=furnished,
+        amenities=amenities,
+        lat=lat,
+        lng=lng,
+        radius_km=radius_km,
     )
 
 
